@@ -1,0 +1,42 @@
+{
+  "name": "git-add-then-commit",
+  "version": "0.0.0-development",
+  "description": "A minimalist cli tool to automate the git-add-then-commit workflow when composing conventional commit messages.",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xunnamius/git-add-then-commit"
+  },
+  "license": "Unlicense",
+  "author": "Xunnamius",
+  "main": "index.js",
+  "bin": {
+    "gac": "dist/index.js",
+    "git-add-then-commit": "dist/index.js"
+  },
+  "prettier": {
+    "endOfLine": "lf",
+    "printWidth": 80,
+    "proseWrap": "always",
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "none",
+    "overrides": [
+      {
+        "files": "**/*.@(ts|?(@(c|m))js)?(x)",
+        "options": {
+          "parser": "babel-ts",
+          "printWidth": 90
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "commander": "^6.2.1",
+    "string-natural-compare": "^3.0.1"
+  },
+  "devDependencies": {
+    "sort-package-json": "^1.48.0"
+  }
+}
