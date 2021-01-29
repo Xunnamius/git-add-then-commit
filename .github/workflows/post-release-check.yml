@@ -34,6 +34,16 @@ jobs:
           echo "::set-output name=node-matrix::{\"node\":[$NODE_TEST_VERSIONS, \"$NODE_CURRENT_VERSION\"]}"
           ! [ -z "$DEBUG" ] && echo "set-output name=node-matrix::{\"node\":[$NODE_TEST_VERSIONS, \"$NODE_CURRENT_VERSION\"]}" || true
 
+  sleep:
+    name: 'five-minute-sleep'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Give npm a chance to update its cache
+        uses: jakejarvis/wait-action@v0.1.0
+        with:
+          time: '5m'
+
   check-compat:
     runs-on: ubuntu-latest
     timeout-minutes: 10
