@@ -40,7 +40,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Give result of npm publish time to propagate
-        uses: jakejarvis/wait-action@v0.1.0
+        uses: kibertoad/wait-action@v1.0.1
         with:
           time: '5m'
 
