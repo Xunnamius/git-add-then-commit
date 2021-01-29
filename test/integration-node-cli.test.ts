@@ -58,7 +58,10 @@ beforeEach(async () => {
     .forEach(([p, f]) => new sjx.ShellString(f).to(`${root}/${p}`));
 
   git = gitFactory();
-  await git.init();
+  await git
+    .init()
+    .addConfig('user.name', 'fake-user')
+    .addConfig('user.email', 'fake@email');
 
   debug(`directory at this point: ${sjx.exec('tree -a', { silent: true }).stdout}`);
 });
