@@ -66,6 +66,8 @@ jobs:
 
           if [ "$PKG_PRIVATE" = "false" ]; then
             export NODE_ENV=production
+            mkdir /tmp/post-release-check
+            cd /tmp/post-release-check
             npm install "${PKG_NAME}@${PKG_VERSION}"
             ! [ -z "$PKG_BIN" ] && npx --no-install $PKG_BIN --help
           fi
