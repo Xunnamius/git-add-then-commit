@@ -47,7 +47,9 @@ jobs:
   check-compat:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: metadata
+    needs:
+      - metadata
+      - five-minute-sleep
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.metadata.outputs.node-matrix) }}
