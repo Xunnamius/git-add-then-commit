@@ -135,11 +135,12 @@ export function configureProgram(program?: Program): Context {
       ).length;
       const minArgCount = !!(shouldDeriveScope = !!opCount) ? 2 : 3;
 
-      if (opCount > 1) throw new Error('only one scope option is allowed');
+      if (opCount > 1)
+        throw new Error('only one scope option is allowed. See --help for details');
       if (finalArgv._.length < minArgCount)
-        throw new Error('must pass all required arguments');
+        throw new Error('must pass all required arguments. See --help for details');
       if (finalArgv._.length == minArgCount && !oldStagedPaths.length)
-        throw new Error('must stage a file or pass a path');
+        throw new Error('must stage a file or pass a path. See --help for details');
 
       const params = Array.from(finalArgv._).map(String);
       const newPaths = params.splice(0, params.length - (shouldDeriveScope ? 2 : 3));
