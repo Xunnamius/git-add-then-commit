@@ -1,6 +1,6 @@
 {
   "name": "git-add-then-commit",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Minimalist CLI tool to automate the git-add-then-commit workflow for conventional commit messages",
   "keywords": [
     "git",
