@@ -37,9 +37,6 @@ export function configureProgram(program: Program): Context;
 export function configureProgram(program?: Program): Context {
   const finalProgram = program || yargs();
 
-  let oldStagedPaths: string[];
-  let shouldDeriveScope: boolean;
-
   finalProgram
     .scriptName('gac')
     .usage(
@@ -114,22 +111,14 @@ export function configureProgram(program?: Program): Context {
   return {
     program: finalProgram,
     parse: async (argv?: string[]) => {
-      if (!(await isGitRepo())) {
-        throw new Error('not a git repository (or any of the parent directories): .git');
-      }
-
-      // ? Updated for use by the otherwise-synchronous check() function
-      oldStagedPaths = await getStagedPaths();
-
       argv = (argv?.length ? argv : process.argv.slice(2)).map((a) =>
         a == '-' ? '-o' : a == '--' ? '-b' : a
       );
 
-      debug('pre-staged paths: %O', oldStagedPaths);
       debug('parse(argv) saw argv: %O', argv);
-
       const finalArgv = finalProgram.parse(argv);
 
+      let shouldDeriveScope = false;
       const opCount = ['scopeOmit', 'scopeBasename', 'scopeAsIs', 'scopeFull'].filter(
         (a) => a in finalArgv
       ).length;
@@ -137,8 +126,16 @@ export function configureProgram(program?: Program): Context {
 
       if (opCount > 1)
         throw new Error('only one scope option is allowed. See --help for details');
+
       if (finalArgv._.length < minArgCount)
         throw new Error('must pass all required arguments. See --help for details');
+
+      if (!(await isGitRepo()))
+        throw new Error('not a git repository (or any of the parent directories): .git');
+
+      const oldStagedPaths = await getStagedPaths();
+      debug('pre-staged paths: %O', oldStagedPaths);
+
       if (finalArgv._.length == minArgCount && !oldStagedPaths.length)
         throw new Error('must stage a file or pass a path. See --help for details');
 
