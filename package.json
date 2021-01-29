@@ -130,7 +130,7 @@
     "common-ancestor-path": "^1.0.1",
     "debug": "^4.3.1",
     "execa": "^5.0.0",
-    "shelljs": "^0.8.4",
+    "simple-git": "^2.31.0",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
@@ -196,7 +196,7 @@
     "remark-reference-links": "^5.0.0",
     "semantic-release": "Xunnamius/semantic-release#contrib-holistic",
     "semver": "^7.3.4",
-    "simple-git": "^2.31.0",
+    "shelljs": "^0.8.4",
     "sort-package-json": "Xunnamius/sort-package-json#contrib-env-expect",
     "source-map-support": "^0.5.19",
     "spellchecker": "^3.7.1",
