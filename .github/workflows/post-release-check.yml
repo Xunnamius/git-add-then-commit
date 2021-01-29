@@ -64,7 +64,7 @@ jobs:
           ! [ -z "$DEBUG" ] && echo "PKG_VERSION=$PKG_VERSION" || true
           ! [ -z "$DEBUG" ] && echo "PKG_BIN=$PKG_BIN" || true
 
-          if ! [ "$PKG_PRIVATE" = "false" ]; then
+          if [ "$PKG_PRIVATE" = "false" ]; then
             export NODE_ENV=production
             npm install "${PKG_NAME}@${PKG_VERSION}"
             ! [ -z "$PKG_BIN" ] && npx --no-install $PKG_BIN --help
