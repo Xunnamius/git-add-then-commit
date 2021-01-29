@@ -91,7 +91,7 @@ beforeEach(async () => {
     );
   }
 
-  debug(`directory at this point: ${sjx.exec('tree', { silent: true }).stdout}`);
+  debug(`directory at this point: ${sjx.exec('tree -a', { silent: true }).stdout}`);
   runTest = createIndexAndRunTest(root);
 });
 

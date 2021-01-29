@@ -60,7 +60,7 @@ beforeEach(async () => {
   git = gitFactory();
   await git.init();
 
-  debug(`directory at this point: ${sjx.exec('tree', { silent: true }).stdout}`);
+  debug(`directory at this point: ${sjx.exec('tree -a', { silent: true }).stdout}`);
 });
 
 afterEach(() => deleteRoot());

@@ -81,7 +81,7 @@ const createIndexAndRunTest = (root: string) => ({
   debug(`echoing string \`${cmd2}\` to ${root}/webpack.config.js`);
   cmd2.to(`${root}/webpack.config.js`);
 
-  debug(`directory at this point: ${sjx.exec('tree', { silent: true }).stdout}`);
+  debug(`directory at this point: ${sjx.exec('tree -a', { silent: true }).stdout}`);
 
   sjx.exec(`npm install webpack@${webpackVersion} webpack-cli`);
 
