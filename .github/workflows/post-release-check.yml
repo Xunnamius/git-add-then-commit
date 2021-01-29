@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Give npm a chance to update its cache
+      - name: Give result of npm publish time to propagate
         uses: jakejarvis/wait-action@v0.1.0
         with:
           time: '5m'
