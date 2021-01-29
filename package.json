@@ -1,18 +1,100 @@
 {
   "name": "git-add-then-commit",
   "version": "0.0.0-development",
-  "description": "A minimalist CLI tool to automate the git-add-then-commit workflow when composing conventional commit messages.",
-  "keywords": [],
+  "description": "Minimalist CLI tool to automate the git-add-then-commit workflow for conventional commit messages",
+  "keywords": [
+    "git",
+    "conventional",
+    "commit",
+    "commits",
+    "conventional-commit",
+    "add",
+    "angular",
+    "semantic",
+    "release"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/xunnamius/git-add-then-commit"
+    "url": "https://github.com/Xunnamius/git-add-then-commit"
   },
   "license": "Unlicense",
   "author": "Xunnamius",
-  "main": "index.js",
+  "sideEffects": false,
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package": "./package.json",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/types/src/index.d.ts",
   "bin": {
-    "gac": "dist/index.js",
-    "git-add-then-commit": "dist/index.js"
+    "gac": "./dist/cli.js",
+    "git-add-then-commit": "./dist/cli.js"
+  },
+  "files": [
+    "/dist",
+    "/LICENSE",
+    "/package.json",
+    "/README.md"
+  ],
+  "scripts": {
+    "build": "npm run build-dist --",
+    "build-changelog": "conventional-changelog --outfile CHANGELOG.md --preset angular --config .changelogrc.js --release-count 0 --skip-unstable && (if [ \"$CHANGELOG_SKIP_TITLE\" != 'true' ]; then { node -e 'console.log(require(\"./.changelogrc.js\").changelogTitle)'; cat CHANGELOG.md; } > CHANGELOG.md.ignore && mv CHANGELOG.md.ignore CHANGELOG.md; fi) && remark -o --use reference-links --use gfm --use frontmatter CHANGELOG.md && prettier --write CHANGELOG.md",
+    "build-dist": "npm run clean && NODE_ENV=production tsc --project tsconfig.types.json && NODE_ENV=production webpack --config-name main && if [ -r ./src/cli.ts ]; then NODE_ENV=production webpack --config-name cli; fi && NODE_ENV=esm babel src --extensions .ts --out-dir dist/esm --out-file-extension .mjs",
+    "build-docs": "ENTRY=`node -e 'console.log(require(\"./package.json\").exports[\".\"].default.replace(/\\.\\/dist\\/(.+)\\.[a-zA-Z0-9]+$/, \"./src/$1.ts\"))'` && echo $ENTRY && typedoc --plugin typedoc-plugin-markdown --out docs --readme none $ENTRY && find docs -name '*.md' -exec sed -i -e 's/`__namedParameters`: //g' {} + && find docs -name '*.md' -exec sed -i -E 's/^.\\s*(\\*\\*)?__namedParameters(\\*\\*)?/**\\({ destructured }\\)**/gm' {} + && find docs -name '*.md' -exec sed -i -e 's/Project: //g' {} + && sed -i -e 1,4d docs/README.md",
+    "build-stats": "NODE_ENV=production webpack --config-name main --json > bundle-stats.ignore.json",
+    "clean": "rm -rf dist coverage external-scripts/bin bundle-stats.ignore.json",
+    "format": "sort-package-json && remark -o --use reference-links --use gfm --use frontmatter . && prettier --write .",
+    "lint": "stdbuf -i0 -o0 -e0 tsc --project tsconfig.lint.json; X=$?; stdbuf -i0 -o0 -e0 eslint --parser-options=project:tsconfig.lint.json src; Y=$?; remark --quiet --use gfm --use frontmatter --use lint-final-newline --use lint-no-auto-link-without-protocol --use lint-no-blockquote-without-marker --use lint-ordered-list-marker-style --use lint-hard-break-spaces --use lint-no-duplicate-definitions --use lint-no-heading-content-indent --use lint-no-inline-padding --use lint-no-undefined-references --use lint-no-unused-definitions .; Z=$?; [ $X -eq 0 ] && [ $Y -eq 0 ] && [ $Z -eq 0 ]",
+    "list-tasks": "node -e 'console.log(Object.keys(require(\"./package.json\").scripts).join(\"\\n\"))'",
+    "prepare": "if [ -z \"$CI\" ]; then npx husky install; else echo 'skipped installing husky git hooks'; fi",
+    "test": "npm run test-unit --",
+    "test-integration": "BABEL_ENV=test jest $JEST_CLI --testPathIgnorePatterns test/unit-*.test.ts",
+    "test-integration-node": "BABEL_ENV=test jest $JEST_CLI test/integration-node*.test.ts",
+    "test-integration-webpack": "BABEL_ENV=test jest $JEST_CLI test/integration-webpack*.test.ts",
+    "test-unit": "BABEL_ENV=test jest $JEST_CLI --coverage --collectCoverageFrom 'src/**/*.ts' --collectCoverageFrom 'lib/**/*.ts' --collectCoverageFrom 'external-scripts/**/*.ts' --testPathIgnorePatterns test/integration-*.test.ts"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "body-leading-blank": [
+        2,
+        "always"
+      ],
+      "footer-leading-blank": [
+        2,
+        "always"
+      ],
+      "type-enum": [
+        2,
+        "always",
+        [
+          "feat",
+          "fix",
+          "docs",
+          "style",
+          "refactor",
+          "test",
+          "revert",
+          "debug",
+          "build",
+          "chore"
+        ]
+      ]
+    }
+  },
+  "lint-staged": {
+    "*.md": "remark -o --use reference-links --use gfm --use frontmatter",
+    "package.json": "sort-package-json",
+    "*": "prettier --write --ignore-unknown"
   },
   "prettier": {
     "endOfLine": "lf",
@@ -32,11 +114,104 @@
       }
     ]
   },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./test/setup.ts"
+    ],
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "testRunner": "jest-circus/runner",
+    "testTimeout": 20000,
+    "verbose": false
+  },
   "dependencies": {
-    "commander": "^6.2.1",
-    "string-natural-compare": "^3.0.1"
+    "common-ancestor-path": "^1.0.1",
+    "debug": "^4.3.1",
+    "execa": "^5.0.0",
+    "shelljs": "^0.8.4",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "sort-package-json": "^1.48.0"
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "@babel/plugin-proposal-export-default-from": "^7.12.1",
+    "@babel/plugin-proposal-function-bind": "^7.12.1",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-typescript": "^7.12.7",
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
+    "@ergodark/types": "^1.0.16",
+    "@octokit/rest": "^18.0.15",
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/exec": "^5.0.0",
+    "@semantic-release/git": "^9.0.0",
+    "@types/confusing-browser-globals": "^1.0.0",
+    "@types/debug": "^4.1.5",
+    "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.22",
+    "@types/semver": "^7.3.4",
+    "@types/shelljs": "^0.8.8",
+    "@types/webpack": "^4.41.26",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.6.3",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-add-import-extension": "^1.4.4",
+    "babel-plugin-source-map-support": "^2.1.3",
+    "babel-plugin-transform-mjs-imports": "^1.0.4",
+    "babel-plugin-transform-rename-import": "^2.3.0",
+    "confusing-browser-globals": "^1.0.10",
+    "conventional-changelog-angular": "^5.0.12",
+    "conventional-changelog-cli": "^2.1.1",
+    "del": "^6.0.0",
+    "escape-string-regexp": "^4.0.0",
+    "eslint": "^7.18.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-import-resolver-typescript": "^2.3.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.3",
+    "husky": "^5.0.4",
+    "jest": "^26.6.3",
+    "jest-circus": "^26.6.3",
+    "jest-extended": "^0.11.5",
+    "lint-staged": "^10.5.3",
+    "prettier": "^2.2.1",
+    "remark-cli": "^9.0.0",
+    "remark-frontmatter": "^3.0.0",
+    "remark-gfm": "^1.0.0",
+    "remark-lint-final-newline": "^1.0.5",
+    "remark-lint-hard-break-spaces": "^2.0.1",
+    "remark-lint-no-auto-link-without-protocol": "^2.0.1",
+    "remark-lint-no-blockquote-without-marker": "^4.0.0",
+    "remark-lint-no-duplicate-definitions": "^2.0.1",
+    "remark-lint-no-heading-content-indent": "^3.0.0",
+    "remark-lint-no-inline-padding": "^3.0.0",
+    "remark-lint-no-undefined-references": "^3.0.0",
+    "remark-lint-no-unused-definitions": "^2.0.1",
+    "remark-lint-ordered-list-marker-style": "^2.0.1",
+    "remark-reference-links": "^5.0.0",
+    "semantic-release": "Xunnamius/semantic-release#contrib-holistic",
+    "semver": "^7.3.4",
+    "simple-git": "^2.31.0",
+    "sort-package-json": "Xunnamius/sort-package-json#contrib-env-expect",
+    "source-map-support": "^0.5.19",
+    "spellchecker": "^3.7.1",
+    "text-extensions": "^2.4.0",
+    "typedoc": "^0.20.16",
+    "typedoc-plugin-markdown": "^3.4.3",
+    "typescript": "^4.1.3",
+    "unique-filename": "^1.1.1",
+    "webpack": "^5.17.0",
+    "webpack-cli": "^4.4.0",
+    "webpack-node-externals": "^2.5.2"
+  },
+  "engines": {
+    "node": ">=12.x"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
