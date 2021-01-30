@@ -31,23 +31,26 @@ const mockedCommit = asMockedFunction<SimpleGit['commit']>();
 const mockedStatus = asMockedFunction<SimpleGit['status']>();
 const mockedCheckIsRepo = asMockedFunction<SimpleGit['checkIsRepo']>();
 const mockedOutputHandler = asMockedFunction<SimpleGit['outputHandler']>();
+const mockedEnv = asMockedFunction<SimpleGit['env']>();
+
+const mockGit = ({
+  add: mockedAdd,
+  commit: mockedCommit,
+  status: mockedStatus,
+  checkIsRepo: mockedCheckIsRepo,
+  outputHandler: mockedOutputHandler,
+  env: mockedEnv
+} as unknown) as SimpleGit;
 
 mockedCommit.mockImplementation(
   () => (mockCommitResult as unknown) as Response<CommitResult>
 );
 
+mockedEnv.mockImplementation(() => mockGit);
+
 beforeAll(() => {
-  // ? Implement default mocks here (instead of immediately)
-  mockedGit.mockImplementation(
-    () =>
-      (({
-        add: mockedAdd,
-        commit: mockedCommit,
-        status: mockedStatus,
-        checkIsRepo: mockedCheckIsRepo,
-        outputHandler: mockedOutputHandler
-      } as unknown) as SimpleGit)
-  );
+  // ? Implement default mock here
+  mockedGit.mockImplementation(() => mockGit);
 });
 
 afterEach(() => {
