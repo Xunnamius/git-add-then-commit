@@ -62,7 +62,7 @@ Defined in: [src/index.ts:16][8]
 
 ▸ **configureProgram**(): [*Context*][2]
 
-Create and return a pre-configured Yargs instance (program) and argv parser
+Create and return a pre-configured Yargs instance (program) and argv parser.
 
 **Returns:** [*Context*][2]
 
@@ -70,7 +70,7 @@ Defined in: [src/index.ts:30][9]
 
 ▸ **configureProgram**(`program`: [*Program*][4]): [*Context*][2]
 
-Configure an existing Yargs instance (program) and return an argv parser
+Configure an existing Yargs instance (program) and return an argv parser.
 
 #### Parameters:
 
@@ -92,12 +92,12 @@ Defined in: [src/index.ts:36][10]
 
 [5]: README.md#configureprogram
 
-[6]: https://github.com/Xunnamius/git-add-then-commit/blob/063ece4/src/index.ts#L20
+[6]: https://github.com/Xunnamius/git-add-then-commit/blob/d2394e5/src/index.ts#L20
 
-[7]: https://github.com/Xunnamius/git-add-then-commit/blob/063ece4/src/index.ts#L18
+[7]: https://github.com/Xunnamius/git-add-then-commit/blob/d2394e5/src/index.ts#L18
 
-[8]: https://github.com/Xunnamius/git-add-then-commit/blob/063ece4/src/index.ts#L16
+[8]: https://github.com/Xunnamius/git-add-then-commit/blob/d2394e5/src/index.ts#L16
 
-[9]: https://github.com/Xunnamius/git-add-then-commit/blob/063ece4/src/index.ts#L30
+[9]: https://github.com/Xunnamius/git-add-then-commit/blob/d2394e5/src/index.ts#L30
 
-[10]: https://github.com/Xunnamius/git-add-then-commit/blob/063ece4/src/index.ts#L36
+[10]: https://github.com/Xunnamius/git-add-then-commit/blob/d2394e5/src/index.ts#L36
