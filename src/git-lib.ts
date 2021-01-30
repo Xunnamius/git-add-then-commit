@@ -6,48 +6,86 @@ import execa from 'execa';
 
 const debug = debugFactory(`${pkgName}:git-lib`);
 
-export async function getStagedPaths(): Promise<string[]> {
-  const { staged } = await git().status();
-  debug('saw staged paths: %O', staged);
-  return staged;
-}
-
-export async function stagePaths(paths: string[]): Promise<void> {
-  debug('adding (staging) paths: %O', paths);
-  paths.length ? await git().add(paths) : null;
-}
-
-export async function makeCommit(message: string): Promise<void> {
-  debug('creating commit with message: %O', message);
-  if (!(await git().commit(message)).commit) throw new Error('commit operation failed');
-}
-
+/**
+ * The result of calling the `fullname()` function.
+ */
 export type FullnameResult =
   | { ambiguous: true; files: string[] }
   | { ambiguous: false; file: string };
 
 /**
- * Attempts to resolve an arbitrary path to a single full file path relative to
- * the repository root.
+ * Returns all paths currently in the index whose indexed state differs from
+ * HEAD. Similar to the result of `git status`.
+ */
+export async function getStagedPaths(): Promise<string[]> {
+  const { files } = await git().status();
+  const result = files
+    .filter((f) => f.index != '?' && f.working_dir != '?')
+    .flatMap((f) => f.path.split(' -> '));
+
+  debug('saw file paths: %O', files);
+  debug('returning: %O', result);
+
+  return result;
+}
+
+/**
+ * Stage one or more paths with `git add`. If `paths` is an empty array, this
+ * function becomes a no-op.
+ */
+export async function stagePaths(paths: string[]): Promise<void> {
+  debug('adding (staging) paths: %O', paths);
+  paths.length && (await git().add(paths));
+}
+
+/**
+ * Create a commit from staged files. Throws if no commit object is created.
+ * `pipeOutput=false` will silence the underlying child process; it is `true` by
+ * default.
+ */
+export async function makeCommit(message: string, pipeOutput = true): Promise<void> {
+  debug(`pipe output: ${pipeOutput}`);
+  debug('creating commit with message: %O', message);
+
+  const g = git();
+
+  if (pipeOutput) {
+    g.outputHandler((command, stdout, stderr) => {
+      debug('piping output from command: %O', command);
+      stdout.pipe(process.stdout);
+      stderr.pipe(process.stderr);
+    });
+  }
+
+  if (!(await g.commit(message)).commit) throw new Error('commit operation failed');
+}
+
+/**
+ * Attempts to resolve an arbitrary `path` to a single full file path relative
+ * to the repository root. If `path` resolves to no file, an error is thrown. If
+ * `path` resolves to more than one file, `path` is considered "arbitrary" and
+ * an array of files is returned.
  *
- * Note that this function expects passed paths to be tracked. If said paths are
- * untracked, the result of this function is undefined. In short: call
- * `stagePaths(paths)` at some point before calling this function.
+ * Note that this function expects all relevant paths to be tracked by git. If
+ * `path` (or related files) are untracked, the result of this function is
+ * undefined. In short: call `stagePaths(paths)` before calling
+ * `fullname(paths[0])`.
  */
 export async function fullname(path: string): Promise<FullnameResult> {
-  const { stdout, command } = await execa('git', [
-    'ls-files',
-    '--cached',
-    '--full-name',
-    path
-  ]);
+  const stdout = (
+    await Promise.all([
+      execa('git', ['diff', '--name-only', '--', path]),
+      execa('git', ['diff', '--staged', '--name-only', '--', path])
+    ])
+  )
+    .reduce((a, { stdout }) => [...a, ...stdout.split('\n')], [] as string[])
+    .filter(Boolean);
 
-  debug(`executed command: ${command}`);
-  debug(`stdout: "${stdout}"`);
+  debug(`combined stdout array:\n"${stdout}"`);
+  const files = Array.from(new Set(stdout));
 
-  if (!stdout) throw new Error(`path "${path}" does not refer to any staged files`);
+  if (!files.length) throw new Error(`path "${path}" does not refer to any staged files`);
 
-  const files = stdout.split('\n');
   const result: FullnameResult =
     files.length > 1 ? { ambiguous: true, files } : { ambiguous: false, file: files[0] };
 
@@ -56,13 +94,18 @@ export async function fullname(path: string): Promise<FullnameResult> {
   return result;
 }
 
-// TODO: comments
+/**
+ * Find the non-root common ancestor of `paths` or return null.
+ */
 export function commonAncestor(paths: string[]): string | null {
   const ancestor = ancestorPath(...paths) || null;
   debug(`computed ancestor: ${ancestor}`);
   return ancestor;
 }
 
+/**
+ * Returns true only if the current working directory is a git repository.
+ */
 export async function isGitRepo(): Promise<boolean> {
   return git().checkIsRepo();
 }

@@ -25,11 +25,11 @@ export type Context = {
 const debug = debugFactory(`${pkgName}:index`);
 
 /**
- * Create and return a pre-configured Yargs instance (program) and argv parser
+ * Create and return a pre-configured Yargs instance (program) and argv parser.
  */
 export function configureProgram(): Context;
 /**
- * Configure an existing Yargs instance (program) and return an argv parser
+ * Configure an existing Yargs instance (program) and return an argv parser.
  *
  * @param program A Yargs instance to configure
  */
@@ -151,11 +151,7 @@ export function configureProgram(program?: Program): Context {
       await stagePaths(newPaths);
 
       const latestStagedPaths = await getStagedPaths();
-      if (!latestStagedPaths.length) {
-        throw new Error(
-          'Assertion error: no paths staged after passing validation check'
-        );
-      }
+      if (!latestStagedPaths.length) throw new Error('nothing to commit');
 
       if (!commitScope) {
         debug('deriving commit scope based on rules: %O', finalArgv);
@@ -214,7 +210,7 @@ export function configureProgram(program?: Program): Context {
         }
       }
 
-      await makeCommit(message);
+      await makeCommit(message, !finalArgv.silent);
       return finalArgv;
     }
   };

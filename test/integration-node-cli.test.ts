@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 import { name as pkgName, version as pkgVersion, bin as pkgBin } from '../package.json';
 import sjx from 'shelljs';
 import debugFactory from 'debug';
@@ -93,7 +94,9 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     debug(`running command: "${cmd}"`);
 
     expect(sjx.exec(cmd).code).toBe(0);
-    expect(await git.show()).toInclude('type(file2): message');
+    const commit = await git.show();
+    expect(commit).toInclude('type(file2): message');
+    expect(commit).toInclude('a/path/to/file2');
   });
 
   it('--scope-full functions as expected under case #1', async () => {
@@ -105,7 +108,9 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     debug(`running command: "${cmd}"`);
 
     expect(sjx.exec(cmd).code).toBe(0);
-    expect(await git.show()).toInclude('type(path/to/file2): message');
+    const commit = await git.show();
+    expect(commit).toInclude('type(path/to/file2): message');
+    expect(commit).toInclude('a/path/to/file2');
   });
 
   it('--scope-full functions as expected under case #2', async () => {
@@ -118,7 +123,9 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     debug(`running command: "${cmd}"`);
 
     expect(sjx.exec(cmd).code).toBe(0);
-    expect(await git.show()).toInclude('type(path/to): message');
+    const commit = await git.show();
+    expect(commit).toInclude('type(path/to): message');
+    expect(commit).toInclude('a/path/to/file2');
   });
 
   it('--scope-full functions as expected under case #3', async () => {
@@ -147,7 +154,10 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     debug(`running command: "${cmd}"`);
 
     expect(sjx.exec(cmd).code).toBe(0);
-    expect(await git.show()).toInclude('type(path/to): message');
+    const commit = await git.show();
+    expect(commit).toInclude('type(path/to): message');
+    expect(commit).toInclude('a/path/to/file2');
+    expect(commit).toInclude('a/path/to/file3');
   });
 
   it('--scope-full functions as expected under case #5', async () => {
@@ -160,7 +170,9 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     debug(`running command: "${cmd}"`);
 
     expect(sjx.exec(cmd).code).toBe(0);
-    expect(await git.show()).toInclude('type(path/to/file2): message');
+    const commit = await git.show();
+    expect(commit).toInclude('type(path/to/file2): message');
+    expect(commit).toInclude('a/path/to/file2');
   });
 
   it('errors if called outside a git repo', async () => {
@@ -201,6 +213,102 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     expect(stderr).toBeEmpty();
   });
 
+  it('commits silently if called with --silent', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} --silent path type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stdout, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(0);
+    expect(stdout).toBeEmpty();
+    expect(stderr).toBeEmpty();
+  });
+
+  it('commits verbosely if not called with --silent', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} path type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stdout, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(0);
+    expect(stdout).not.toBeEmpty();
+    expect(stderr).toBeEmpty();
+  });
+
+  it('renames are committed properly', async () => {
+    expect.hasAssertions();
+
+    await git.add('.');
+    await git.commit('test: commit');
+    sjx.mv('file1', 'file3');
+
+    const cmd = `node ${gac} file1 file3 fix -- 'rename to file3'`;
+    debug(`running command: "${cmd}"`);
+
+    expect(sjx.exec(cmd).code).toBe(0);
+
+    const commit = await git.show();
+    expect(commit).toInclude('fix(file1): rename to file3');
+    expect(commit).toInclude('a/file1');
+    expect(commit).toInclude('b/file3');
+  });
+
+  it('deleted paths are committed properly', async () => {
+    expect.hasAssertions();
+
+    await git.add('.');
+    await git.commit('test: commit');
+    await del(['path']);
+
+    const cmd = `node ${gac} path fix -- 'deleted'`;
+    debug(`running command: "${cmd}"`);
+
+    expect(sjx.exec(cmd).code).toBe(0);
+
+    const commit = await git.show();
+    expect(commit).toInclude('fix(file2): deleted');
+    expect(commit).toInclude('a/path/to/file2');
+  });
+
+  it('both staged and non-staged paths are added and committed properly', async () => {
+    expect.hasAssertions();
+
+    await git.add('file1');
+    new sjx.ShellString('new file contents').to('file1');
+
+    const cmd = `node ${gac} path file1 fix -f 'complex add'`;
+    debug(`running command: "${cmd}"`);
+
+    expect(sjx.exec(cmd).code).toBe(0);
+
+    const commit = await git.show();
+    expect(commit).toInclude('fix(path/to/file2): complex add');
+    expect(commit).toInclude('a/file1');
+    expect(commit).toInclude('a/path/to/file2');
+    expect(await (await git.status()).isClean()).toBeTrue();
+  });
+
+  it('still works when cwd is repo subdir', async () => {
+    expect.hasAssertions();
+
+    sjx.mkdir('fake');
+    sjx.cd('fake');
+
+    const cmd = `node ${gac} ../path ../file1 fix -f 'super complex add'`;
+    debug(`running command: "${cmd}"`);
+
+    expect(sjx.exec(cmd).code).toBe(0);
+
+    const commit = await git.show();
+    expect(commit).toInclude('fix(path/to/file2): super complex add');
+    expect(commit).toInclude('a/file1');
+    expect(commit).toInclude('a/path/to/file2');
+  });
+
   fixtures.forEach((test) => {
     const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
       '(none)'
@@ -226,15 +334,15 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
         ['scopeFull', 'scopeBasename', 'scopeAsIs'].includes(argName)
       ) {
         const { code, stderr } = sjx.exec(cmd);
-        // eslint-disable-next-line jest/no-conditional-expect
         expect(code).toBe(1);
-        // eslint-disable-next-line jest/no-conditional-expect
         expect(stderr).toInclude('ambiguous');
       } else {
-        // eslint-disable-next-line jest/no-conditional-expect
         expect(sjx.exec(cmd).code).toBe(0);
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(await git.show()).toInclude(test.commitMessage);
+        const commit = await git.show();
+        expect(commit).toInclude(test.commitMessage);
+        [...test.stagePaths, ...test.preStagedPaths].forEach((p) =>
+          expect(commit).toInclude(`a/${p}`)
+        );
       }
     });
   });

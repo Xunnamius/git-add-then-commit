@@ -78,14 +78,26 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
       expect.hasAssertions();
 
       await Promise.allSettled([
-        expect(runProgram([])).toReject(),
-        expect(runProgram(['file'])).toReject(),
-        expect(runProgram(['file', 'file'])).toReject(),
-        expect(runProgram(['--scope-omit'])).toReject(),
-        expect(runProgram(['file', '--scope-omit'])).toReject(),
+        expect(runProgram([])).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        }),
+        expect(runProgram(['file'])).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        }),
+        expect(runProgram(['file', 'file'])).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        }),
+        expect(runProgram(['--scope-omit'])).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        }),
+        expect(runProgram(['file', '--scope-omit'])).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        }),
         expect(
           runProgram(['type', '--scope-omit', '--scope-basename', 'message'])
-        ).toReject(),
+        ).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        }),
         expect(
           runProgram([
             '--scope-omit',
@@ -93,7 +105,9 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
             '--scope-as-is',
             '--scope-full'
           ])
-        ).toReject()
+        ).rejects.toMatchObject({
+          message: expect.toInclude('--help')
+        })
       ]);
     });
 
@@ -105,20 +119,31 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
         runProgram(['type', '--scope-omit', 'scope', 'message'])
       ).not.toReject();
       await expect(runProgram(['file1', 'file2', 'type', 'message'])).not.toReject();
-      expect(mockedMakeCommit).toBeCalledWith('scope: message');
-      expect(mockedMakeCommit).toBeCalledWith('file2(type): message');
+
+      expect(mockedMakeCommit).toBeCalledWith('scope: message', true);
+      expect(mockedMakeCommit).toBeCalledWith('file2(type): message', true);
     });
 
     it('errors if called without paths and no files are staged', async () => {
       expect.hasAssertions();
+
       mockStagedPaths.clear();
-      await expect(runProgram(['type', 'scope', 'message'])).toReject();
+
+      await expect(runProgram(['type', 'scope', 'message'])).rejects.toMatchObject({
+        message: expect.toInclude('must stage a file or pass a path')
+      });
     });
 
     it('errors if called outside a git repo', async () => {
       expect.hasAssertions();
+
       mockedIsGitRepo.mockReturnValueOnce(Promise.resolve(false));
-      await expect(runProgram(['file', 'type', 'scope', 'message'])).toReject();
+
+      await expect(
+        runProgram(['file', 'type', 'scope', 'message'])
+      ).rejects.toMatchObject({
+        message: expect.toInclude('not a git repository')
+      });
     });
 
     it('errors if called with nothing to commit', async () => {
@@ -126,16 +151,25 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
 
       mockStagedPaths.clear();
       mockedGetStagedPaths.mockReturnValueOnce(Promise.resolve([]));
-      await expect(runProgram(['file', 'type', 'scope', 'message'])).toReject();
+
+      await expect(
+        runProgram(['file', 'type', 'scope', 'message'])
+      ).rejects.toMatchObject({
+        message: expect.toInclude('nothing to commit')
+      });
+
       expect(mockedGetStagedPaths).toBeCalled();
     });
 
     it('errors if makeCommit fails', async () => {
       expect.hasAssertions();
+
       mockedMakeCommit.mockImplementationOnce(async () => {
         throw new Error('badness');
       });
+
       await expect(runProgram(['file', 'type', 'scope', 'message'])).toReject();
+
       expect(mockedMakeCommit).toBeCalled();
     });
 
@@ -159,9 +193,9 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
       await expect(runProgram([])).not.toReject();
       expect(mockedFullname).toBeCalledTimes(2);
 
-      expect(mockedMakeCommit).toBeCalledWith('type: message');
-      expect(mockedMakeCommit).toBeCalledWith('type(file): message');
-      expect(mockedMakeCommit).toBeCalledWith('type2(file2): message2');
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true);
+      expect(mockedMakeCommit).toBeCalledWith('type(file): message', true);
+      expect(mockedMakeCommit).toBeCalledWith('type2(file2): message2', true);
     });
 
     it('--scope-full functions as expected under various cases', async () => {
@@ -286,7 +320,7 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
       await expect(runProgram(['type', '--', 'message'])).not.toReject();
       expect(mockedStagePaths).toBeCalledTimes(2);
       expect(mockedFullname).toBeCalledTimes(1);
-      expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message');
+      expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message', true);
     });
 
     fixtures.forEach((test) => {
@@ -362,7 +396,7 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
           }
 
           expect(mockedStagePaths).toBeCalledWith(Array.from(test.passedPaths));
-          expect(mockedMakeCommit).toBeCalledWith(test.commitMessage);
+          expect(mockedMakeCommit).toBeCalledWith(test.commitMessage, true);
         });
       }
     });
