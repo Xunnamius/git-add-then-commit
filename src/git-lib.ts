@@ -20,7 +20,7 @@ export type FullnameResult =
 export async function getStagedPaths(): Promise<string[]> {
   const { files } = await git().status();
   const result = files
-    .filter((f) => f.index != '?' && f.working_dir != '?')
+    .filter((f) => !['?', ' '].includes(f.index))
     .flatMap((f) => f.path.split(' -> '));
 
   debug('getStagedPaths: saw file paths: %O', files);
@@ -44,19 +44,20 @@ export async function stagePaths(paths: string[]): Promise<void> {
  * default.
  */
 export async function makeCommit(message: string, pipeOutput = true): Promise<void> {
-  const g = git();
   debug(`makeCommit: pipe output: ${pipeOutput}`);
   debug('makeCommit: creating commit with message: %O', message);
 
   if (pipeOutput) {
-    g.outputHandler((command, stdout, stderr) => {
-      debug('piping output from command: %O', command);
-      stdout.pipe(process.stdout);
-      stderr.pipe(process.stderr);
+    // ? We use git directly here so we can inherit stdio for term color support
+    await execa('git', ['commit', '-m', message], {
+      stdio: 'inherit'
+    }).catch(() => {
+      throw new Error('commit operation failed');
     });
+  } else {
+    if (!(await git().commit(message)).commit)
+      throw new Error('silent commit operation failed');
   }
-
-  if (!(await g.commit(message)).commit) throw new Error('commit operation failed');
 }
 
 /**

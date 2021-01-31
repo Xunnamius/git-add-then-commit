@@ -3,7 +3,6 @@ import { asMockedFunction } from './setup';
 import * as lib from '../src/git-lib';
 import git from 'simple-git';
 import execa, { ExecaChildProcess } from 'execa';
-import { PassThrough } from 'stream';
 
 import type { SimpleGit, StatusResult, Response, CommitResult } from 'simple-git';
 
@@ -30,28 +29,19 @@ const mockedAdd = asMockedFunction<SimpleGit['add']>();
 const mockedCommit = asMockedFunction<SimpleGit['commit']>();
 const mockedStatus = asMockedFunction<SimpleGit['status']>();
 const mockedCheckIsRepo = asMockedFunction<SimpleGit['checkIsRepo']>();
-const mockedOutputHandler = asMockedFunction<SimpleGit['outputHandler']>();
-const mockedEnv = asMockedFunction<SimpleGit['env']>();
 
 const mockGit = ({
   add: mockedAdd,
   commit: mockedCommit,
   status: mockedStatus,
-  checkIsRepo: mockedCheckIsRepo,
-  outputHandler: mockedOutputHandler,
-  env: mockedEnv
+  checkIsRepo: mockedCheckIsRepo
 } as unknown) as SimpleGit;
 
 mockedCommit.mockImplementation(
   () => (mockCommitResult as unknown) as Response<CommitResult>
 );
 
-mockedEnv.mockImplementation(() => mockGit);
-
-beforeAll(() => {
-  // ? Implement default mock here
-  mockedGit.mockImplementation(() => mockGit);
-});
+mockedGit.mockImplementation(() => mockGit);
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -91,64 +81,62 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
   });
 
   describe('::makeCommit', () => {
-    it('makes proper commit when called', async () => {
+    it('makes execa-based commit when called normally', async () => {
       expect.hasAssertions();
+
+      mockedExeca.mockImplementationOnce(
+        () => (Promise.resolve() as unknown) as ReturnType<typeof mockedExeca>
+      );
+
       await lib.makeCommit('type(scope): message');
+
+      expect(mockedExeca).toBeCalledWith(
+        'git',
+        ['commit', '-m', 'type(scope): message'],
+        {
+          stdio: 'inherit'
+        }
+      );
+    });
+
+    it('makes simple-git-based commit when called with pipeOutput=false', async () => {
+      expect.hasAssertions();
+      await lib.makeCommit('type(scope): message', false);
       expect(mockedCommit).toBeCalledWith('type(scope): message');
     });
 
-    it('rejects if commit operation fails', async () => {
+    it('rejects if execa-based commit operation fails', async () => {
       expect.hasAssertions();
 
-      const oldCommit = mockCommitResult.commit;
+      mockedExeca.mockImplementationOnce(
+        () => (Promise.reject() as unknown) as ReturnType<typeof mockedExeca>
+      );
 
-      mockCommitResult.commit = '';
       await expect(lib.makeCommit('type(scope): message')).rejects.toMatchObject({
         message: 'commit operation failed'
       });
-      mockCommitResult.commit = oldCommit;
 
-      expect(mockedCommit).toBeCalledWith('type(scope): message');
-    });
-
-    it('pipes git output to process.stdout and process.stderr by default', async () => {
-      expect.hasAssertions();
-
-      const mockStdout = new PassThrough();
-      const mockStderr = new PassThrough();
-
-      let stdoutWasPiped = false;
-      let stderrWasPiped = false;
-
-      const stdoutListener = () => (stdoutWasPiped = true);
-      const stderrListener = () => (stderrWasPiped = true);
-
-      process.stdout.addListener('pipe', stdoutListener);
-      process.stderr.addListener('pipe', stderrListener);
-
-      mockedOutputHandler.mockImplementationOnce(
-        (cb: Parameters<SimpleGit['outputHandler']>[0]) =>
-          ((cb && cb('fake', mockStdout, mockStderr, [])) as unknown) as SimpleGit
+      expect(mockedExeca).toBeCalledWith(
+        'git',
+        ['commit', '-m', 'type(scope): message'],
+        {
+          stdio: 'inherit'
+        }
       );
-      await lib.makeCommit('type(scope): message');
-
-      expect(mockedOutputHandler).toHaveBeenCalled();
-      expect(stdoutWasPiped).toBeTrue();
-      expect(stderrWasPiped).toBeTrue();
-
-      process.stdout.removeListener('pipe', stdoutListener);
-      process.stderr.removeListener('pipe', stderrListener);
-
-      mockStdout.end();
-      mockStderr.end();
-      mockStdout.destroy();
-      mockStderr.destroy();
     });
 
-    it('does not pipe git output to process.stdout or process.stderr if pipeOutput = false', async () => {
+    it('rejects if simple-git-based commit operation fails', async () => {
       expect.hasAssertions();
-      await lib.makeCommit('type(scope): message', false);
-      expect(mockedOutputHandler).not.toHaveBeenCalled();
+
+      const oldCommit = mockCommitResult.commit;
+      mockCommitResult.commit = '';
+
+      await expect(lib.makeCommit('type(scope): message', false)).rejects.toMatchObject({
+        message: 'silent commit operation failed'
+      });
+
+      mockCommitResult.commit = oldCommit;
+      expect(mockedCommit).toBeCalledWith('type(scope): message');
     });
   });
 
@@ -173,12 +161,12 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
           'path/to/file2',
           {
             path: 'path/to/file2',
-            index: ' ',
-            working_dir: 'D'
+            index: 'A',
+            working_dir: ' '
           }
         ],
         ['b/file3', { path: 'b/file3', index: ' ', working_dir: 'D' }],
-        ['file4', { path: 'file4', index: ' ', working_dir: 'M' }],
+        ['file4', { path: 'file4', index: 'D', working_dir: 'M' }],
         [
           ['file5', 'file6'],
           {
@@ -194,7 +182,7 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
       } as unknown) as Response<StatusResult>);
 
       expect(await lib.getStagedPaths()).toStrictEqual(
-        stagedPathData.flatMap((p) => (p[1].index != '?' ? p[0] : []))
+        stagedPathData.flatMap((p) => (['?', ' '].includes(p[1].index) ? [] : p[0]))
       );
       expect(mockedStatus).toHaveBeenCalled();
     });
