@@ -13,6 +13,13 @@ const envPlugins = [
   new DefinePlugin({ 'process.env': '{}' })
 ];
 
+const externals = [
+  nodeExternals(),
+  ({ request }, cb) =>
+    // ? Externalize all .json imports (required as commonjs modules)
+    /\.json$/.test(request) ? cb(null, `commonjs ${request}`) : cb()
+];
+
 const mainConfig = {
   name: 'main',
   mode: 'production',
@@ -31,7 +38,7 @@ const mainConfig = {
     //globalObject: 'this',
   },
 
-  externals: [nodeExternals()],
+  externals,
   externalsPresets: { node: true },
 
   stats: {
@@ -66,7 +73,7 @@ const cliConfig = {
     path: `${__dirname}/dist`
   },
 
-  externals: [nodeExternals()],
+  externals,
   externalsPresets: { node: true },
 
   stats: {
