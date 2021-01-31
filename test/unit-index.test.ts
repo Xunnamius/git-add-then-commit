@@ -79,24 +79,24 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
 
       await Promise.allSettled([
         expect(runProgram([])).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('must pass all required arguments')
         }),
         expect(runProgram(['file'])).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('must pass all required arguments')
         }),
         expect(runProgram(['file', 'file'])).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('must pass all required arguments')
         }),
         expect(runProgram(['--scope-omit'])).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('must pass all required arguments')
         }),
         expect(runProgram(['file', '--scope-omit'])).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('must pass all required arguments')
         }),
         expect(
           runProgram(['type', '--scope-omit', '--scope-basename', 'message'])
         ).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('only one scope option is allowed')
         }),
         expect(
           runProgram([
@@ -106,7 +106,7 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
             '--scope-full'
           ])
         ).rejects.toMatchObject({
-          message: expect.toInclude('--help')
+          message: expect.toInclude('only one scope option is allowed')
         })
       ]);
     });
@@ -146,7 +146,7 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
       });
     });
 
-    it('errors if called with nothing to commit', async () => {
+    it("errors if strange condition occurs where there's actually nothing to commit", async () => {
       expect.hasAssertions();
 
       mockStagedPaths.clear();

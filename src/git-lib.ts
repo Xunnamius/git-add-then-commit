@@ -23,8 +23,8 @@ export async function getStagedPaths(): Promise<string[]> {
     .filter((f) => f.index != '?' && f.working_dir != '?')
     .flatMap((f) => f.path.split(' -> '));
 
-  debug('saw file paths: %O', files);
-  debug('returning: %O', result);
+  debug('getStagedPaths: saw file paths: %O', files);
+  debug('getStagedPaths: returning: %O', result);
 
   return result;
 }
@@ -34,7 +34,7 @@ export async function getStagedPaths(): Promise<string[]> {
  * function becomes a no-op.
  */
 export async function stagePaths(paths: string[]): Promise<void> {
-  debug('adding (staging) paths: %O', paths);
+  debug('stagePaths: adding (staging) paths: %O', paths);
   paths.length && (await git().add(paths));
 }
 
@@ -44,10 +44,9 @@ export async function stagePaths(paths: string[]): Promise<void> {
  * default.
  */
 export async function makeCommit(message: string, pipeOutput = true): Promise<void> {
-  debug(`pipe output: ${pipeOutput}`);
-  debug('creating commit with message: %O', message);
-
   const g = git();
+  debug(`makeCommit: pipe output: ${pipeOutput}`);
+  debug('makeCommit: creating commit with message: %O', message);
 
   if (pipeOutput) {
     g.outputHandler((command, stdout, stderr) => {
@@ -81,7 +80,7 @@ export async function fullname(path: string): Promise<FullnameResult> {
     .reduce((a, { stdout }) => [...a, ...stdout.split('\n')], [] as string[])
     .filter(Boolean);
 
-  debug(`combined stdout array:\n"${stdout}"`);
+  debug(`fullname: combined stdout array:\n"${stdout}"`);
   const files = Array.from(new Set(stdout));
 
   if (!files.length) throw new Error(`path "${path}" does not refer to any staged files`);
@@ -89,8 +88,8 @@ export async function fullname(path: string): Promise<FullnameResult> {
   const result: FullnameResult =
     files.length > 1 ? { ambiguous: true, files } : { ambiguous: false, file: files[0] };
 
-  debug('computed files (from stdout): %O', files);
-  debug('result: %O', result);
+  debug('fullname: computed files (from stdout): %O', files);
+  debug('fullname: result: %O', result);
   return result;
 }
 
@@ -99,7 +98,7 @@ export async function fullname(path: string): Promise<FullnameResult> {
  */
 export function commonAncestor(paths: string[]): string | null {
   const ancestor = ancestorPath(...paths) || null;
-  debug(`computed ancestor: ${ancestor}`);
+  debug(`commonAncestor: computed ancestor: ${ancestor}`);
   return ancestor;
 }
 

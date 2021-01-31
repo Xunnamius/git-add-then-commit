@@ -70,6 +70,145 @@ beforeEach(async () => {
 afterEach(() => deleteRoot());
 
 describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
+  it('errors if called with bad args #1', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac}`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('must pass all required arguments');
+  });
+
+  it('errors if called with bad args #2', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} file`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('must pass all required arguments');
+  });
+
+  it('errors if called with bad args #3', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} file file`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('must pass all required arguments');
+  });
+
+  it('errors if called with bad args #4', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} --scope-omit`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('must pass all required arguments');
+  });
+
+  it('errors if called with bad args #5', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} type --scope-omit --scope-basename message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('only one scope option is allowed');
+  });
+
+  it('errors if called outside a git repo', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} path type scope message`;
+
+    await del('.git');
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('not a git repository');
+  });
+
+  it('errors if called with nothing to commit #1', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('stage a file or pass a path');
+  });
+
+  it('errors if called with nothing to commit #2', async () => {
+    expect.hasAssertions();
+
+    await git.add('file1').commit('test');
+    new sjx.ShellString('f').to(`${sjx.pwd()}/file1`);
+
+    const cmd = `node ${gac} type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('stage a file or pass a path');
+  });
+
+  it('errors silently if called with --silent', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} --silent type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stdout, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(1);
+    expect(stdout).toBeEmpty();
+    expect(stderr).toBeEmpty();
+  });
+
+  it('commits silently if called with --silent', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} --silent path type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stdout, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(0);
+    expect(stdout).toBeEmpty();
+    expect(stderr).toBeEmpty();
+  });
+
+  it('commits verbosely if not called with --silent', async () => {
+    expect.hasAssertions();
+
+    const cmd = `node ${gac} path type scope message`;
+
+    debug(`running command: "${cmd}"`);
+    const { code, stdout, stderr } = sjx.exec(cmd);
+
+    expect(code).toBe(0);
+    expect(stdout).not.toBeEmpty();
+    expect(stderr).toBeEmpty();
+  });
+
   it('--scope-basename functions as expected under case #1', async () => {
     expect.hasAssertions();
 
@@ -173,70 +312,6 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     const commit = await git.show();
     expect(commit).toInclude('type(path/to/file2): message');
     expect(commit).toInclude('a/path/to/file2');
-  });
-
-  it('errors if called outside a git repo', async () => {
-    expect.hasAssertions();
-
-    const cmd = `node ${gac} path type scope message`;
-
-    await del('.git');
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
-
-    expect(code).toBe(1);
-    expect(stderr).toInclude('not a git repository');
-  });
-
-  it('errors if called with nothing to commit', async () => {
-    expect.hasAssertions();
-
-    const cmd = `node ${gac} type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
-
-    expect(code).toBe(1);
-    expect(stderr).toInclude('stage a file or pass a path');
-  });
-
-  it('errors silently if called with --silent', async () => {
-    expect.hasAssertions();
-
-    const cmd = `node ${gac} --silent type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stdout, stderr } = sjx.exec(cmd);
-
-    expect(code).toBe(1);
-    expect(stdout).toBeEmpty();
-    expect(stderr).toBeEmpty();
-  });
-
-  it('commits silently if called with --silent', async () => {
-    expect.hasAssertions();
-
-    const cmd = `node ${gac} --silent path type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stdout, stderr } = sjx.exec(cmd);
-
-    expect(code).toBe(0);
-    expect(stdout).toBeEmpty();
-    expect(stderr).toBeEmpty();
-  });
-
-  it('commits verbosely if not called with --silent', async () => {
-    expect.hasAssertions();
-
-    const cmd = `node ${gac} path type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stdout, stderr } = sjx.exec(cmd);
-
-    expect(code).toBe(0);
-    expect(stdout).not.toBeEmpty();
-    expect(stderr).toBeEmpty();
   });
 
   it('renames are committed properly', async () => {

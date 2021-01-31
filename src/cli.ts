@@ -8,7 +8,9 @@ export default (({ program, parse }) =>
   parse().catch((e: Error | string) => {
     !program.argv.silent &&
       // eslint-disable-next-line no-console
-      console.error(`Fatal error: ${typeof e == 'string' ? e : e.message}`);
-    debug(`fatal: ${e}`);
+      console.error(
+        `fatal: ${(typeof e == 'string' ? e : e.message).replace(/^fatal: /, '')}`
+      );
+    debug(`error handler: ${e}`);
     process.exit(1);
   }))(configureProgram());

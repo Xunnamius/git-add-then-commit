@@ -115,7 +115,7 @@ export function configureProgram(program?: Program): Context {
         a == '-' ? '-o' : a == '--' ? '-b' : a
       );
 
-      debug('parse(argv) saw argv: %O', argv);
+      debug('parse: saw argv: %O', argv);
       const finalArgv = finalProgram.parse(argv);
 
       let shouldDeriveScope = false;
@@ -134,7 +134,7 @@ export function configureProgram(program?: Program): Context {
         throw new Error('not a git repository (or any of the parent directories): .git');
 
       const oldStagedPaths = await getStagedPaths();
-      debug('pre-staged paths: %O', oldStagedPaths);
+      debug('parse: pre-staged paths: %O', oldStagedPaths);
 
       if (finalArgv._.length == minArgCount && !oldStagedPaths.length)
         throw new Error('must stage a file or pass a path. See --help for details');
@@ -150,11 +150,12 @@ export function configureProgram(program?: Program): Context {
 
       await stagePaths(newPaths);
 
+      // * This check may not be necessary if stagePaths always throws on error
       const latestStagedPaths = await getStagedPaths();
-      if (!latestStagedPaths.length) throw new Error('nothing to commit');
+      if (!latestStagedPaths.length) throw new Error('assert failed: nothing to commit');
 
       if (!commitScope) {
-        debug('deriving commit scope based on rules: %O', finalArgv);
+        debug('parse: deriving commit scope based on rules: %O', finalArgv);
 
         if (finalArgv.scopeOmit) message = `${commitType}: ${commitMessage}`;
         else {
