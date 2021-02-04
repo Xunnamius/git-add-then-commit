@@ -56,9 +56,12 @@ beforeAll(() => {
   mockedIsGitRepo.mockReturnValue(Promise.resolve(true));
 });
 
+beforeEach(() => {
+  mockStagedPaths.add('some-random-file'); // ? Needs to be >=1 staged or else!
+});
+
 afterEach(() => {
   mockStagedPaths.clear();
-  mockStagedPaths.add('some-random-file'); // ? Needs to be >=1 staged or else!
   jest.clearAllMocks();
 });
 
@@ -200,7 +203,6 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
 
     it('--scope-full functions as expected under various cases', async () => {
       expect.hasAssertions();
-      mockStagedPaths.clear();
 
       let addPathsToMockStaged: string[];
 
@@ -298,7 +300,6 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
 
     it('--scope-basename functions as expected under various cases', async () => {
       expect.hasAssertions();
-      mockStagedPaths.clear();
 
       // * Testing ambiguous first path arg
       mockedStagePaths.mockImplementationOnce(
@@ -321,6 +322,130 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
       expect(mockedStagePaths).toBeCalledTimes(2);
       expect(mockedFullname).toBeCalledTimes(1);
       expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message', true);
+    });
+
+    it('only derived scopes are lowercased #1', async () => {
+      expect.hasAssertions();
+
+      await expect(runProgram(['type', 'SCOPE', 'message1'])).not.toReject();
+      expect(mockedMakeCommit).toBeCalledWith('type(SCOPE): message1', true);
+      expect(mockedStagePaths).toBeCalledWith([]);
+      expect(mockedFullname).not.toBeCalled();
+    });
+
+    it('only derived scopes are lowercased #2', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('file1')
+      );
+
+      await expect(runProgram(['file1', 'type', 'SCOPE', 'message2'])).not.toReject();
+      expect(mockedMakeCommit).toBeCalledWith('type(SCOPE): message2', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).not.toBeCalled();
+    });
+
+    it('scopes are always lowercased #1', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('FILE1')
+      );
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'FILE1' })
+      );
+
+      await expect(runProgram(['FILE1', 'type', '--', 'message3'])).not.toReject();
+      expect(mockedMakeCommit).toBeCalledWith('type(file1): message3', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+    });
+
+    it('scopes are always lowercased #2', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('PATH/TO/FILE2')
+      );
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2' })
+      );
+
+      await expect(runProgram(['PATH', 'type', '--', 'message4'])).not.toReject();
+      expect(mockedMakeCommit).toBeCalledWith('type(file2): message4', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+    });
+
+    it('scopes are always lowercased #3', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('PATH/TO/FILE2')
+      );
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2' })
+      );
+
+      await expect(
+        runProgram(['PATH/TO/FILE2', 'type', '--', 'message5'])
+      ).not.toReject();
+
+      expect(mockedMakeCommit).toBeCalledWith('type(file2): message5', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+    });
+
+    it('scopes are always lowercased #4', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('FILE1')
+      );
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'FILE1' })
+      );
+
+      await expect(runProgram(['FILE1', 'type', '-f', 'message6'])).not.toReject();
+      expect(mockedMakeCommit).toBeCalledWith('type(file1): message6', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+    });
+
+    it('scopes are always lowercased #5', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('PATH/TO/FILE2')
+      );
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2' })
+      );
+
+      await expect(runProgram(['PATH', 'type', '-f', 'message7'])).not.toReject();
+      expect(mockedMakeCommit).toBeCalledWith('type(path/to/file2): message7', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+    });
+
+    it('scopes are always lowercased #6', async () => {
+      expect.hasAssertions();
+
+      mockedStagePaths.mockImplementationOnce(
+        async () => void mockStagedPaths.add('PATH/TO/FILE2')
+      );
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2' })
+      );
+
+      await expect(
+        runProgram(['PATH/TO/FILE2', 'type', '-f', 'message8'])
+      ).not.toReject();
+
+      expect(mockedMakeCommit).toBeCalledWith('type(path/to/file2): message8', true);
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
     });
 
     fixtures.forEach((test) => {

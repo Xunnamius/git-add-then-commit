@@ -110,8 +110,8 @@ gac path feat -- 'commit message about file2'
 ```
 
 `--` (an alias of `--scope-basename`) is a **scope option** that causes `gac` to
-use the _basename_ of a) the first path passed to `gac` or b) the first staged
-path returned by `git status`.
+use the _basename_ of 1) the first path passed to `gac` or 2) the first staged
+path returned by `git status`. The basename is always lowercased.
 
 If more than one file is staged and no paths are passed to `gac`, using
 `--scope-basename` will cause an ambiguity error.
@@ -164,7 +164,7 @@ git commit -m 'feat(path/to/file2): commit message about file2'
 If no path arguments are passed, `--scope-full` will return the full path if
 there is exactly one staged file, the deepest common ancestor of all staged
 files if there is more than one, or fail with an ambiguity error if there is no
-non-root common ancestor.
+non-root common ancestor. The path is always lowercased.
 
 #### Other Details
 

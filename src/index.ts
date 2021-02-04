@@ -180,6 +180,8 @@ export function configureProgram(program?: Program): Context {
                 );
               }
             }
+
+            computedScope = computedScope.toLowerCase();
           } else if (finalArgv.scopeFull) {
             const getAncestor = (files: string[]) => {
               const ancestor = commonAncestor(files);
@@ -199,6 +201,8 @@ export function configureProgram(program?: Program): Context {
               if (latestStagedPaths.length == 1) computedScope = latestStagedPaths[0];
               else computedScope = getAncestor(latestStagedPaths);
             }
+
+            computedScope = computedScope.toLowerCase();
           } else {
             // * scopeAsIs
             if (newPaths.length) {

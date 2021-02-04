@@ -384,6 +384,38 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     expect(commit).toInclude('a/path/to/file2');
   });
 
+  it('--scope-basename derived scopes are lowercased', async () => {
+    expect.hasAssertions();
+
+    sjx.mkdir('-p', 'PATH2/TO');
+    new sjx.ShellString('file3').to(`${sjx.pwd()}/PATH2/TO/FILE3`);
+
+    const cmd = `node ${gac} PATH2/TO/FILE3 type -- message`;
+
+    debug(`running command: "${cmd}"`);
+
+    expect(sjx.exec(cmd).code).toBe(0);
+    const commit = await git.show();
+    expect(commit).toInclude('type(file3): message');
+    expect(commit).toInclude('a/PATH2/TO/FILE3');
+  });
+
+  it('--scope-full derived scopes are lowercased', async () => {
+    expect.hasAssertions();
+
+    sjx.mkdir('-p', 'PATH2/TO');
+    new sjx.ShellString('file3').to(`${sjx.pwd()}/PATH2/TO/FILE3`);
+
+    const cmd = `node ${gac} PATH2/TO/FILE3 type -f message`;
+
+    debug(`running command: "${cmd}"`);
+
+    expect(sjx.exec(cmd).code).toBe(0);
+    const commit = await git.show();
+    expect(commit).toInclude('type(path2/to/file3): message');
+    expect(commit).toInclude('a/PATH2/TO/FILE3');
+  });
+
   fixtures.forEach((test) => {
     const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
       '(none)'
