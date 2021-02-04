@@ -1,5 +1,6 @@
 import { configureProgram } from '../src/index';
 import { name as pkgName } from '../package.json';
+import { asMockedFunction } from './setup';
 
 import type { Context } from '../src/index';
 
@@ -12,9 +13,7 @@ const TEST_IDENTIFIER = 'unit-cli';
 jest.mock('../src/index');
 
 const mockedParse = jest.fn(async () => ({}));
-const mockedConfigureProgram = (configureProgram as unknown) as jest.Mock<
-  ReturnType<typeof configureProgram>
->;
+const mockedConfigureProgram = asMockedFunction(configureProgram);
 
 const importCli = async () => {
   let pkg;
@@ -31,6 +30,7 @@ const importCli = async () => {
 let mockSilent = false;
 
 beforeAll(() => {
+  // ? Because side-effects of imports happen right after beforeAll() is called
   mockedConfigureProgram.mockImplementation(
     () =>
       (({
