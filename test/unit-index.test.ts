@@ -30,6 +30,9 @@ const mockedIsGitRepo = asMockedFunction(isGitRepo);
 const mockedMakeCommit = asMockedFunction(makeCommit);
 const mockedStagePaths = asMockedFunction(stagePaths);
 
+mockedGetStagedPaths.mockImplementation(async () => Array.from(mockStagedPaths));
+mockedIsGitRepo.mockReturnValue(Promise.resolve(true));
+
 const getProgram = () => {
   const ctx = configureProgram();
   ctx.program.exitProcess(false);
@@ -50,10 +53,6 @@ beforeAll(() => {
   // ? Suppress Yargs help output to keep test output clean
   if (!process.env.DEBUG)
     stderrSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
-  // ? Implement default mocks here (instead of immediately)
-  mockedGetStagedPaths.mockImplementation(async () => Array.from(mockStagedPaths));
-  mockedIsGitRepo.mockReturnValue(Promise.resolve(true));
 });
 
 beforeEach(() => {
