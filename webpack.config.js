@@ -1,14 +1,32 @@
-// This webpack config is used to transpile src to dist, compile externals, etc
+// This webpack config is used to transpile src to dist, compile externals,
+// compile executables, etc
 
 const { EnvironmentPlugin, DefinePlugin, BannerPlugin } = require('webpack');
+const { config: populateEnv } = require('dotenv');
+const { verifyEnvironment } = require('./env-expect');
 const nodeExternals = require('webpack-node-externals');
 const debug = require('debug')(`${require('./package.json').name}:webpack-config`);
 
-debug('(no dotenv support)');
+let enableDotenvSupport = false;
+
+try {
+  require('fs').access('.env');
+  enableDotenvSupport = true;
+} catch {}
+
+const dotenv = enableDotenvSupport ? populateEnv() : null;
+debug(
+  ...(enableDotenvSupport
+    ? ['saw dotenv result: %O', dotenv]
+    : ['(dotenv support disabled)'])
+);
+const env = dotenv?.parsed || {};
+debug('saw env: %O', env);
+verifyEnvironment();
 
 const envPlugins = [
-  // ? Make process.env available for defined vars
-  new EnvironmentPlugin(process.env),
+  // ? Load our .env results as the defaults (overridden by process.env)
+  new EnvironmentPlugin({ ...env, ...process.env }),
   // ? Create shim process.env for undefined vars (per my tastes!)
   new DefinePlugin({ 'process.env': '{}' })
 ];
@@ -33,6 +51,7 @@ const mainConfig = {
     path: `${__dirname}/dist`,
     // ! ▼ Only required for libraries (CJS2/UMD/etc)
     // ! Note: ESM outputs are handled by Babel ONLY!
+    //libraryTarget: 'umd',
     libraryTarget: 'commonjs2'
     // ! ▼ Only required for when libraryTarget is UMD (to help globals work)
     //globalObject: 'this',
@@ -90,7 +109,7 @@ const cliConfig = {
   ignoreWarnings: [/critical dependency:/i],
   plugins: [
     ...envPlugins,
-    // * ▼ For bundled CLI applications: make entry file executable w/ shebang
+    // * ▼ For bundled CLI applications, make entry file executable w/ shebang
     new BannerPlugin({ banner: '#!/usr/bin/env node', raw: true, entryOnly: true })
   ]
 };
