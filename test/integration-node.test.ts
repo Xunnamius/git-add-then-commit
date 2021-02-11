@@ -6,7 +6,7 @@ import uniqueFilename from 'unique-filename';
 import del from 'del';
 import { satisfies } from 'semver';
 
-const TEST_IDENTIFIER = 'integration-node-lib';
+const TEST_IDENTIFIER = 'integration-node';
 const debug = debugFactory(`${pkgName}:${TEST_IDENTIFIER}`);
 
 sjx.config.silent = !process.env.DEBUG;

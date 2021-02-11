@@ -7,7 +7,7 @@ import del from 'del';
 import fixtures from './fixtures';
 import gitFactory from 'simple-git';
 
-const TEST_IDENTIFIER = 'integration-node-cli';
+const TEST_IDENTIFIER = 'integration-client';
 const debug = debugFactory(`${pkgName}:${TEST_IDENTIFIER}`);
 const gac = `${__dirname}/../${pkgBin['git-add-then-commit']}`;
 

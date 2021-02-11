@@ -56,6 +56,7 @@
     "prepare": "if [ -z \"$CI\" ]; then npx husky install; else echo 'skipped installing husky git hooks'; fi",
     "test": "npm run test-unit --",
     "test-integration": "BABEL_ENV=test jest $JEST_CLI --testPathIgnorePatterns test/unit-*.test.ts",
+    "test-integration-client": "BABEL_ENV=test jest $JEST_CLI test/integration-client*.test.ts",
     "test-integration-node": "BABEL_ENV=test jest $JEST_CLI test/integration-node*.test.ts",
     "test-integration-webpack": "BABEL_ENV=test jest $JEST_CLI test/integration-webpack*.test.ts",
     "test-unit": "BABEL_ENV=test jest $JEST_CLI --coverage --collectCoverageFrom 'src/**/*.ts' --collectCoverageFrom 'lib/**/*.ts' --collectCoverageFrom 'external-scripts/**/*.ts' --testPathIgnorePatterns test/integration-*.test.ts"
