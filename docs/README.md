@@ -21,7 +21,7 @@
 #### Type parameters:
 
 | Name | Default |
-| ---- | ------- |
+| :--- | :------ |
 | `T`  | {}      |
 
 Defined in: node_modules/@types/yargs/index.d.ts:641
@@ -30,12 +30,12 @@ Defined in: node_modules/@types/yargs/index.d.ts:641
 
 ### Context
 
-Ƭ **Context**: { `parse`: [_Parser_][3] ; `program`: [_Program_][4] }
+Ƭ **Context**: _object_
 
 #### Type declaration:
 
 | Name      | Type           |
-| --------- | -------------- |
+| :-------- | :------------- |
 | `parse`   | [_Parser_][3]  |
 | `program` | [_Program_][4] |
 
@@ -46,6 +46,18 @@ Defined in: [src/index.ts:20][6]
 ### Parser
 
 Ƭ **Parser**: (`argv?`: _string_\[]) => _Promise_<[_Arguments_][1]>
+
+#### Type declaration:
+
+▸ (`argv?`: _string_\[]): _Promise_<[_Arguments_][1]>
+
+#### Parameters:
+
+| Name    | Type       |
+| :------ | :--------- |
+| `argv?` | _string_[] |
+
+**Returns:** _Promise_<[_Arguments_][1]>
 
 Defined in: [src/index.ts:18][7]
 
@@ -76,7 +88,7 @@ Configure an existing Yargs instance (program) and return an argv parser.
 #### Parameters:
 
 | Name      | Type           | Description                   |
-| --------- | -------------- | ----------------------------- |
+| :-------- | :------------- | :---------------------------- |
 | `program` | [_Program_][4] | A Yargs instance to configure |
 
 **Returns:** [_Context_][2]
@@ -89,12 +101,12 @@ Defined in: [src/index.ts:36][10]
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/25667ac/src/index.ts#L20
+  https://github.com/Xunnamius/git-add-then-commit/blob/ae0c47b/src/index.ts#L20
 [7]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/25667ac/src/index.ts#L18
+  https://github.com/Xunnamius/git-add-then-commit/blob/ae0c47b/src/index.ts#L18
 [8]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/25667ac/src/index.ts#L16
+  https://github.com/Xunnamius/git-add-then-commit/blob/ae0c47b/src/index.ts#L16
 [9]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/25667ac/src/index.ts#L30
+  https://github.com/Xunnamius/git-add-then-commit/blob/ae0c47b/src/index.ts#L30
 [10]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/25667ac/src/index.ts#L36
+  https://github.com/Xunnamius/git-add-then-commit/blob/ae0c47b/src/index.ts#L36
