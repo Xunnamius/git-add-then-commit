@@ -118,11 +118,11 @@ it('errors if called with bad args #5', async () => {
   });
 });
 
-it.only('errors if called outside a git repo', async () => {
+it('errors if called outside a git repo', async () => {
   expect.hasAssertions();
 
   await withMockedFixture(async ({ root }) => {
-    await del(`${root}/.git`);
+    await del(`${root}/.git`, { force: true });
 
     const { code, stderr } = await run(
       CLI_BIN_PATH,
@@ -370,7 +370,7 @@ it('deleted paths are committed properly', async () => {
 
     await git.add('.');
     await git.commit('test: commit');
-    await del([`${root}/path`]);
+    await del(`${root}/path`, { force: true });
 
     await run(CLI_BIN_PATH, ['path', 'fix', '--', 'deleted'], {
       cwd: root,
