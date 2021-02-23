@@ -1,9 +1,6 @@
 export type Path = { [K in keyof typeof Paths]: string };
 export type PathActual = string[] & { actual: string[] };
 
-// ! Any strings used below must not contain the double quote character (")
-// ! since they may be used as CLI arguments automatically wrapped in quotes
-
 // ? The paths as they might appear in the command `git add paths`
 const Paths = {
   single: ['file1'] as PathActual,
