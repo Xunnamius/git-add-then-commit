@@ -1,364 +1,401 @@
 /* eslint-disable jest/no-conditional-expect */
-import { name as pkgName, version as pkgVersion, bin as pkgBin } from '../package.json';
-import sjx from 'shelljs';
-import debugFactory from 'debug';
-import uniqueFilename from 'unique-filename';
-import del from 'del';
+import { name as pkgName, bin as pkgBin } from '../package.json';
+import { promises as fs } from 'fs';
 import fixtures from './fixtures';
-import gitFactory from 'simple-git';
+import del from 'del';
+import debugFactory from 'debug';
+
+import {
+  run,
+  mockFixtureFactory,
+  gitRepositoryFixture,
+  dummyDirectoriesFixture,
+  dummyFilesFixture
+} from './setup';
+
+import type { FixtureOptions } from './setup';
 
 const TEST_IDENTIFIER = 'integration-client';
+const CLI_BIN_PATH = `${__dirname}/../${pkgBin['git-add-then-commit']}`;
+
+const { writeFile } = fs;
 const debug = debugFactory(`${pkgName}:${TEST_IDENTIFIER}`);
-const gac = `${__dirname}/../${pkgBin['git-add-then-commit']}`;
+const paths = Object.values(fixtures.meta.paths).flatMap((p) => p.actual);
 
-sjx.config.silent = !process.env.DEBUG;
-
-if (sjx.exec('git help', { silent: true }).code !== 0)
-  throw new Error('git must be installed and in PATH to run this test suite');
-
-if (!sjx.test('-d', './dist')) {
-  debug(`unable to find main distributables dir: ${sjx.pwd()}/dist`);
-  throw new Error(
-    'must build distributables before running this test suite (try `npm run build-dist`)'
-  );
-}
-
-debug(`pkgName: "${pkgName}"`);
-debug(`pkgVersion: "${pkgVersion}"`);
-
-let deleteRoot: () => Promise<void>;
-let git: ReturnType<typeof gitFactory>;
-
-beforeEach(async () => {
-  const paths = Object.values(fixtures.meta.paths).flatMap((p) => p.actual);
-  const root = uniqueFilename(sjx.tempdir(), TEST_IDENTIFIER);
-  const owd = process.cwd();
-
-  deleteRoot = async () => {
-    sjx.cd(owd);
-    debug(`forcibly removing dir ${root}`);
-    await del(root, { force: true });
-  };
-
-  sjx.mkdir('-p', root);
-
-  paths
+const fixtureOptions: Partial<FixtureOptions> = {
+  directoryPaths: paths
     .filter((p) => p.includes('/'))
-    .map((p) => p.split('/').slice(0, -1).join('/'))
-    .forEach((p) => sjx.mkdir('-p', `${root}/${p}`));
+    .map((p) => p.split('/').slice(0, -1).join('/')),
+  initialFileContents: paths.reduce((obj, path) => {
+    // ? The file at `path` has contents equal to `path`
+    obj[path] = path;
+    return obj;
+  }, {} as FixtureOptions['initialFileContents']),
+  use: [dummyDirectoriesFixture(), dummyFilesFixture(), gitRepositoryFixture()]
+};
 
-  const cd = sjx.cd(root);
+const withMockedFixture = mockFixtureFactory(TEST_IDENTIFIER, fixtureOptions);
 
-  if (cd.code != 0) {
-    await deleteRoot();
-    throw new Error(`failed to mkdir/cd into ${root}: ${cd.stderr} ${cd.stdout}`);
-  } else debug(`created temp root dir: ${root}`);
+beforeAll(async () => {
+  if ((await run('git', ['help'])).code != 0) {
+    debug(`unable to find main distributable: ${CLI_BIN_PATH}`);
+    throw new Error('must build distributables first (try `npm run build-dist`)');
+  }
 
-  paths
-    .map((p) => [p, p.split('/').slice(-1)[0]])
-    .forEach(([p, f]) => new sjx.ShellString(f).to(`${root}/${p}`));
-
-  git = gitFactory();
-  await git
-    .init()
-    .addConfig('user.name', 'fake-user')
-    .addConfig('user.email', 'fake@email');
-
-  debug(`directory at this point: ${sjx.exec('tree -a', { silent: true }).stdout}`);
+  if ((await run('test', ['-e', CLI_BIN_PATH])).code != 0) {
+    debug(`unable to find main distributable: ${CLI_BIN_PATH}`);
+    throw new Error('must build distributables first (try `npm run build-dist`)');
+  }
 });
 
-afterEach(() => deleteRoot());
+it('executes when called directly (shebang test)', async () => {
+  expect.hasAssertions();
 
-describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
-  it('errors if called with bad args #1', async () => {
-    expect.hasAssertions();
+  await withMockedFixture(async ({ root }) => {
+    const { code, stdout } = await run(CLI_BIN_PATH, ['--help'], { cwd: root });
 
-    const cmd = `node ${gac}`;
+    expect(code).toBe(0);
+    expect(stdout).toInclude('commit-type commit-scope commit-message');
+  });
+});
 
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+it('errors if called with bad args #1', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root }) => {
+    const { code, stderr } = await run(CLI_BIN_PATH, [], { cwd: root });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('must pass all required arguments');
   });
+});
 
-  it('errors if called with bad args #2', async () => {
-    expect.hasAssertions();
+it('errors if called with bad args #2', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} file`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
-
-    expect(code).toBe(1);
-    expect(stderr).toInclude('must pass all required arguments');
-  });
-
-  it('errors if called with bad args #3', async () => {
-    expect.hasAssertions();
-
-    const cmd = `node ${gac} file file`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+  await withMockedFixture(async ({ root }) => {
+    const { code, stderr } = await run(CLI_BIN_PATH, ['file'], { cwd: root });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('must pass all required arguments');
   });
+});
 
-  it('errors if called with bad args #4', async () => {
-    expect.hasAssertions();
+it('errors if called with bad args #3', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} --scope-omit`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+  await withMockedFixture(async ({ root }) => {
+    const { code, stderr } = await run(CLI_BIN_PATH, ['file', 'file'], { cwd: root });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('must pass all required arguments');
   });
+});
 
-  it('errors if called with bad args #5', async () => {
-    expect.hasAssertions();
+it('errors if called with bad args #4', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} type --scope-omit --scope-basename message`;
+  await withMockedFixture(async ({ root }) => {
+    const { code, stderr } = await run(CLI_BIN_PATH, ['--scope-omit'], { cwd: root });
 
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+    expect(code).toBe(1);
+    expect(stderr).toInclude('must pass all required arguments');
+  });
+});
+
+it('errors if called with bad args #5', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root }) => {
+    const { code, stderr } = await run(
+      CLI_BIN_PATH,
+      ['type', '--scope-omit', '--scope-basename', 'message'],
+      { cwd: root }
+    );
 
     expect(code).toBe(1);
     expect(stderr).toInclude('only one scope option is allowed');
   });
+});
 
-  it('errors if called outside a git repo', async () => {
-    expect.hasAssertions();
+it.only('errors if called outside a git repo', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} path type scope message`;
+  await withMockedFixture(async ({ root }) => {
+    await del(`${root}/.git`);
 
-    await del('.git');
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+    const { code, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'type', 'scope', 'message'],
+      { cwd: root }
+    );
 
     expect(code).toBe(1);
     expect(stderr).toInclude('not a git repository');
   });
+});
 
-  it('errors if called with nothing to commit #1', async () => {
-    expect.hasAssertions();
+it('errors if called with nothing to commit #1', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+  await withMockedFixture(async ({ root }) => {
+    const { code, stderr } = await run(CLI_BIN_PATH, ['type', 'scope', 'message'], {
+      cwd: root
+    });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('stage a file or pass a path');
   });
+});
 
-  it('errors if called with nothing to commit #2', async () => {
-    expect.hasAssertions();
+it('errors if called with nothing to commit #2', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
     await git.add('file1').commit('test');
-    new sjx.ShellString('f').to(`${sjx.pwd()}/file1`);
+    await writeFile(`${root}/file1`, 'some-file-stuff');
 
-    const cmd = `node ${gac} type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+    const { code, stderr } = await run(CLI_BIN_PATH, ['type', 'scope', 'message'], {
+      cwd: root
+    });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('stage a file or pass a path');
   });
+});
 
-  it('errors silently if called with --silent', async () => {
-    expect.hasAssertions();
+it('errors silently if called with --silent', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} --silent type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stdout, stderr } = sjx.exec(cmd);
+  await withMockedFixture(async ({ root }) => {
+    const { code, stdout, stderr } = await run(
+      CLI_BIN_PATH,
+      ['--silent', 'type', 'scope', 'message'],
+      { cwd: root }
+    );
 
     expect(code).toBe(1);
     expect(stdout).toBeEmpty();
     expect(stderr).toBeEmpty();
   });
+});
 
-  it('commits silently if called with --silent', async () => {
-    expect.hasAssertions();
+it('commits silently if called with --silent', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} --silent path type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stdout, stderr } = sjx.exec(cmd);
+  await withMockedFixture(async ({ root }) => {
+    const { code, stdout, stderr } = await run(
+      CLI_BIN_PATH,
+      ['--silent', 'path', 'type', 'scope', 'message'],
+      { cwd: root }
+    );
 
     expect(code).toBe(0);
     expect(stdout).toBeEmpty();
     expect(stderr).toBeEmpty();
   });
+});
 
-  it('commits verbosely if not called with --silent', async () => {
-    expect.hasAssertions();
+it('commits verbosely if not called with --silent', async () => {
+  expect.hasAssertions();
 
-    const cmd = `node ${gac} path type scope message`;
-
-    debug(`running command: "${cmd}"`);
-    const { code, stdout, stderr } = sjx.exec(cmd);
+  await withMockedFixture(async ({ root }) => {
+    const { code, stdout, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'type', 'scope', 'message'],
+      { cwd: root }
+    );
 
     expect(code).toBe(0);
     expect(stdout).not.toBeEmpty();
     expect(stderr).toBeEmpty();
   });
+});
 
-  it('--scope-basename functions as expected under case #1', async () => {
-    expect.hasAssertions();
+it('--scope-basename works with ambiguous first path arg', async () => {
+  expect.hasAssertions();
 
-    // * Testing ambiguous first path arg
-    const cmd = `node ${gac} path type -- message`;
+  await withMockedFixture(async ({ root }) => {
+    await writeFile(`${root}/path/to/file3`, 'some-file-stuff');
 
-    new sjx.ShellString('f').to(`${sjx.pwd()}/path/to/file3`);
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+    const { code, stderr } = await run(CLI_BIN_PATH, ['path', 'type', '--', 'message'], {
+      cwd: root
+    });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('ambiguous');
   });
+});
 
-  it('--scope-basename functions as expected under case #2', async () => {
-    expect.hasAssertions();
+it('--scope-basename works with single already-staged file', async () => {
+  expect.hasAssertions();
 
-    // * Testing with single already-staged file
-    const cmd = `node ${gac} path type -- message`;
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
     await git.add('file1');
-    debug(`running command: "${cmd}"`);
+    await run(CLI_BIN_PATH, ['path', 'type', '--', 'message'], {
+      cwd: root,
+      reject: true
+    });
 
-    expect(sjx.exec(cmd).code).toBe(0);
     const commit = await git.show();
     expect(commit).toInclude('type(file2): message');
     expect(commit).toInclude('a/path/to/file2');
   });
+});
 
-  it('--scope-full functions as expected under case #1', async () => {
-    expect.hasAssertions();
+it('--scope-full works with non-ambiguous first path arg', async () => {
+  expect.hasAssertions();
 
-    // * Testing non-ambiguous first path arg
-    const cmd = `node ${gac} path type -f message`;
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    debug(`running command: "${cmd}"`);
+    await run(CLI_BIN_PATH, ['path', 'type', '-f', 'message'], {
+      cwd: root,
+      reject: true
+    });
 
-    expect(sjx.exec(cmd).code).toBe(0);
     const commit = await git.show();
     expect(commit).toInclude('type(path/to/file2): message');
     expect(commit).toInclude('a/path/to/file2');
   });
+});
 
-  it('--scope-full functions as expected under case #2', async () => {
-    expect.hasAssertions();
+it('--scope-full works with ambiguous first path arg with common ancestor', async () => {
+  expect.hasAssertions();
 
-    // * Testing ambiguous first path arg with common ancestor
-    const cmd = `node ${gac} path type -f message`;
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    new sjx.ShellString('f').to(`${sjx.pwd()}/path/to/file3`);
-    debug(`running command: "${cmd}"`);
+    await writeFile(`${root}/path/to/file3`, 'some-file-stuff');
+    await run(CLI_BIN_PATH, ['path', 'type', '-f', 'message'], {
+      cwd: root,
+      reject: true
+    });
 
-    expect(sjx.exec(cmd).code).toBe(0);
     const commit = await git.show();
     expect(commit).toInclude('type(path/to): message');
     expect(commit).toInclude('a/path/to/file2');
   });
+});
 
-  it('--scope-full functions as expected under case #3', async () => {
-    expect.hasAssertions();
+it('--scope-full works with staged paths with no common ancestor and with no path args', async () => {
+  expect.hasAssertions();
 
-    // * Testing staged paths with no common ancestor and with no path args
-    const cmd = `node ${gac} type -f message`;
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    new sjx.ShellString('f').to(`${sjx.pwd()}/file3`);
+    await writeFile(`${root}/file3`, 'some-file-stuff');
     await git.add(['file1', 'file3']);
-    debug(`running command: "${cmd}"`);
-    const { code, stderr } = sjx.exec(cmd);
+
+    const { code, stderr } = await run(CLI_BIN_PATH, ['type', '-f', 'message'], {
+      cwd: root
+    });
 
     expect(code).toBe(1);
     expect(stderr).toInclude('ambiguous');
   });
+});
 
-  it('--scope-full functions as expected under case #4', async () => {
-    expect.hasAssertions();
+it('--scope-full works with staged paths with common ancestor with no path args', async () => {
+  expect.hasAssertions();
 
-    // * Testing staged paths with common ancestor with no path args
-    const cmd = `node ${gac} type -f message`;
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    new sjx.ShellString('f').to(`${sjx.pwd()}/path/to/file3`);
+    await writeFile(`${root}/path/to/file3`, 'some-file-stuff');
     await git.add(['path/to/file2', 'path/to/file3']);
-    debug(`running command: "${cmd}"`);
 
-    expect(sjx.exec(cmd).code).toBe(0);
+    await run(CLI_BIN_PATH, ['type', '-f', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
     const commit = await git.show();
     expect(commit).toInclude('type(path/to): message');
     expect(commit).toInclude('a/path/to/file2');
     expect(commit).toInclude('a/path/to/file3');
   });
+});
 
-  it('--scope-full functions as expected under case #5', async () => {
-    expect.hasAssertions();
+it('--scope-full works with single staged path with no path args', async () => {
+  expect.hasAssertions();
 
-    // * Testing single staged path with no path args
-    const cmd = `node ${gac} type -f message`;
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
     await git.add(['path/to/file2']);
-    debug(`running command: "${cmd}"`);
 
-    expect(sjx.exec(cmd).code).toBe(0);
+    await run(CLI_BIN_PATH, ['type', '-f', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
     const commit = await git.show();
     expect(commit).toInclude('type(path/to/file2): message');
     expect(commit).toInclude('a/path/to/file2');
   });
+});
 
-  it('renames are committed properly', async () => {
-    expect.hasAssertions();
+it('renames are committed properly', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
     await git.add('.');
     await git.commit('test: commit');
-    sjx.mv('file1', 'file3');
+    await run('mv', ['file1', 'file3'], { cwd: root, reject: true });
 
-    const cmd = `node ${gac} file1 file3 fix -- 'rename to file3'`;
-    debug(`running command: "${cmd}"`);
-
-    expect(sjx.exec(cmd).code).toBe(0);
+    await run(CLI_BIN_PATH, ['file1', 'file3', 'fix', '--', 'rename to file3'], {
+      cwd: root,
+      reject: true
+    });
 
     const commit = await git.show();
     expect(commit).toInclude('fix(file1): rename to file3');
     expect(commit).toInclude('a/file1');
     expect(commit).toInclude('b/file3');
   });
+});
 
-  it('deleted paths are committed properly', async () => {
-    expect.hasAssertions();
+it('deleted paths are committed properly', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
     await git.add('.');
     await git.commit('test: commit');
-    await del(['path']);
+    await del([`${root}/path`]);
 
-    const cmd = `node ${gac} path fix -- 'deleted'`;
-    debug(`running command: "${cmd}"`);
-
-    expect(sjx.exec(cmd).code).toBe(0);
+    await run(CLI_BIN_PATH, ['path', 'fix', '--', 'deleted'], {
+      cwd: root,
+      reject: true
+    });
 
     const commit = await git.show();
     expect(commit).toInclude('fix(file2): deleted');
     expect(commit).toInclude('a/path/to/file2');
   });
+});
 
-  it('both staged and non-staged paths are added and committed properly', async () => {
-    expect.hasAssertions();
+it('both staged and non-staged paths are added and committed properly', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
     await git.add('file1');
-    new sjx.ShellString('new file contents').to('file1');
+    await writeFile(`${root}/file1`, 'new file contents');
 
-    const cmd = `node ${gac} path file1 fix -f 'complex add'`;
-    debug(`running command: "${cmd}"`);
-
-    expect(sjx.exec(cmd).code).toBe(0);
+    await run(CLI_BIN_PATH, ['path', 'file1', 'fix', '-f', 'complex add'], {
+      cwd: root,
+      reject: true
+    });
 
     const commit = await git.show();
     expect(commit).toInclude('fix(path/to/file2): complex add');
@@ -366,85 +403,97 @@ describe(`${pkgName} [${TEST_IDENTIFIER}]`, () => {
     expect(commit).toInclude('a/path/to/file2');
     expect(await (await git.status()).isClean()).toBeTrue();
   });
+});
 
-  it('still works when cwd is repo subdir', async () => {
-    expect.hasAssertions();
+it('still works when cwd is repo subdir', async () => {
+  expect.hasAssertions();
 
-    sjx.mkdir('fake');
-    sjx.cd('fake');
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    const cmd = `node ${gac} ../path ../file1 fix -f 'super complex add'`;
-    debug(`running command: "${cmd}"`);
+    await run('mkdir', ['fake'], { cwd: root, reject: true });
 
-    expect(sjx.exec(cmd).code).toBe(0);
+    await run(CLI_BIN_PATH, ['../path', '../file1', 'fix', '-f', 'super complex add'], {
+      cwd: `${root}/fake`,
+      reject: true
+    });
 
     const commit = await git.show();
     expect(commit).toInclude('fix(path/to/file2): super complex add');
     expect(commit).toInclude('a/file1');
     expect(commit).toInclude('a/path/to/file2');
   });
+});
 
-  it('--scope-basename derived scopes are lowercased', async () => {
-    expect.hasAssertions();
+it('--scope-basename derived scopes are lowercased', async () => {
+  expect.hasAssertions();
 
-    sjx.mkdir('-p', 'PATH2/TO');
-    new sjx.ShellString('file3').to(`${sjx.pwd()}/PATH2/TO/FILE3`);
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    const cmd = `node ${gac} PATH2/TO/FILE3 type -- message`;
+    await run('mkdir', ['-p', 'PATH2/TO'], { cwd: root, reject: true });
+    await writeFile(`${root}/PATH2/TO/FILE3`, 'file3');
 
-    debug(`running command: "${cmd}"`);
+    await run(CLI_BIN_PATH, ['PATH2/TO/FILE3', 'type', '--', 'message'], {
+      cwd: root,
+      reject: true
+    });
 
-    expect(sjx.exec(cmd).code).toBe(0);
     const commit = await git.show();
     expect(commit).toInclude('type(file3): message');
     expect(commit).toInclude('a/PATH2/TO/FILE3');
   });
+});
 
-  it('--scope-full derived scopes are lowercased', async () => {
-    expect.hasAssertions();
+it('--scope-full derived scopes are lowercased', async () => {
+  expect.hasAssertions();
 
-    sjx.mkdir('-p', 'PATH2/TO');
-    new sjx.ShellString('file3').to(`${sjx.pwd()}/PATH2/TO/FILE3`);
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
 
-    const cmd = `node ${gac} PATH2/TO/FILE3 type -f message`;
+    await run('mkdir', ['-p', 'PATH2/TO'], { cwd: root, reject: true });
+    await writeFile(`${root}/PATH2/TO/FILE3`, 'file3');
 
-    debug(`running command: "${cmd}"`);
+    await run(CLI_BIN_PATH, ['PATH2/TO/FILE3', 'type', '-f', 'message'], {
+      cwd: root,
+      reject: true
+    });
 
-    expect(sjx.exec(cmd).code).toBe(0);
     const commit = await git.show();
     expect(commit).toInclude('type(path2/to/file3): message');
     expect(commit).toInclude('a/PATH2/TO/FILE3');
   });
+});
 
-  fixtures.forEach((test) => {
-    const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
-      '(none)'
-    ];
+fixtures.forEach((test) => {
+  const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
+    '(none)'
+  ];
 
-    it(// eslint-disable-next-line jest/valid-title
-    `stages and commits:: pre-staged: ${test.preStagedPaths.length} added: ${
-      test.stagePaths.length
-    } scope-arg: ${argName} first-arg: ${
-      test.stagePaths.length
-        ? test.programArgs[0]
-        : test.preStagedPaths[0] + ' (pre-staged)'
-    }${test.titleSuffix ? ' [' + test.titleSuffix + ']' : ''}`, async () => {
-      expect.hasAssertions();
+  it(// eslint-disable-next-line jest/valid-title
+  `stages and commits:: pre-staged: ${test.preStagedPaths.length} added: ${
+    test.stagePaths.length
+  } scope-arg: ${argName} first-arg: ${
+    test.stagePaths.length
+      ? test.programArgs[0]
+      : test.preStagedPaths[0] + ' (pre-staged)'
+  }${test.titleSuffix ? ' [' + test.titleSuffix + ']' : ''}`, async () => {
+    expect.hasAssertions();
+
+    await withMockedFixture(async ({ root, git }) => {
+      if (!git) throw new Error('must use git-repository fixture');
+
       await git.add(test.preStagedPaths);
-
-      // ? Converts every arg in program args into "arg"
-      const cmd = `node ${gac} ` + test.programArgs.map((a) => `"${a}"`).join(' ');
-      debug(`running command: "${cmd}"`);
+      const { code, stderr } = await run(CLI_BIN_PATH, test.programArgs, { cwd: root });
 
       if (
         !test.passedPaths.length &&
         ['scopeFull', 'scopeBasename', 'scopeAsIs'].includes(argName)
       ) {
-        const { code, stderr } = sjx.exec(cmd);
         expect(code).toBe(1);
         expect(stderr).toInclude('ambiguous');
       } else {
-        expect(sjx.exec(cmd).code).toBe(0);
+        expect(code).toBe(0);
         const commit = await git.show();
         expect(commit).toInclude(test.commitMessage);
         [...test.stagePaths, ...test.preStagedPaths].forEach((p) =>
