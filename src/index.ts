@@ -1,4 +1,8 @@
 import { name as pkgName } from '../package.json';
+import { basename } from 'path';
+import yargs from 'yargs/yargs';
+import debugFactory from 'debug';
+
 import {
   getStagedPaths,
   makeCommit,
@@ -7,11 +11,9 @@ import {
   isGitRepo,
   commonAncestor
 } from './git-lib';
-import { basename } from 'path';
-import yargs from 'yargs/yargs';
-import debugFactory from 'debug';
 
 import type { Arguments, Argv } from 'yargs';
+import type { FullnameResult } from './git-lib';
 
 export type Program = Argv;
 export type { Arguments };
