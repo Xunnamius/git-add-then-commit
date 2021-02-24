@@ -462,7 +462,7 @@ it('both staged and non-staged paths are added and committed properly', async ()
     await git.add('file1');
     await writeFile(`${root}/file1`, 'new file contents');
 
-    await run(CLI_BIN_PATH, ['path', 'file1', 'fix', '-f', 'complex add'], {
+    await run(CLI_BIN_PATH, ['path', 'file1', 'fix', '-f', 'complex add', '--force'], {
       cwd: root,
       reject: true
     });
@@ -554,7 +554,9 @@ fixtures.forEach((test) => {
       if (!git) throw new Error('must use git-repository fixture');
 
       await git.add(test.preStagedPaths);
-      const { code, stderr } = await run(CLI_BIN_PATH, test.programArgs, { cwd: root });
+      const { code, stderr } = await run(CLI_BIN_PATH, [...test.programArgs, '--force'], {
+        cwd: root
+      });
 
       if (
         !test.passedPaths.length &&
