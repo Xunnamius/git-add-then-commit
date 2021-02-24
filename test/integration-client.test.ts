@@ -182,6 +182,76 @@ it('errors silently if called with --silent', async () => {
   });
 });
 
+it('errors if execution might clobber index (shallow, unambiguous)', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await git.add('file1');
+    await writeFile(`${root}/file1`, 'new file contents');
+
+    const { code, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'file1', 'fix', '-f', 'doomed add'],
+      {
+        cwd: root
+      }
+    );
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('"git add" could clobber index state');
+  });
+});
+
+it('errors if execution might clobber index (deep, ambiguous)', async () => {
+  // TODO
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await Promise.all([
+      writeFile(`${root}/path/to/file3`, 'new file contents'),
+      writeFile(`${root}/path/to/file4`, 'new file contents')
+    ]);
+    await git.add(['path/to/file3', 'path/to/file4']);
+
+    const { code, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'fix', '-f', 'doomed add'],
+      {
+        cwd: root
+      }
+    );
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('"git add" could clobber index state');
+  });
+});
+
+it('does not error if execution might clobber index when done with --force', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await git.add('file1');
+    await writeFile(`${root}/file1`, 'new file contents');
+
+    const { code, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'file1', 'fix', '-f', 'doomed? add', '--force'],
+      {
+        cwd: root
+      }
+    );
+
+    expect(code).toBe(0);
+    expect(stderr).toBeEmpty();
+  });
+});
+
 it('commits silently if called with --silent', async () => {
   expect.hasAssertions();
 
