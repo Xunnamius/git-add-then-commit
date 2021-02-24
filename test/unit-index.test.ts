@@ -615,7 +615,7 @@ describe('::configureProgram', () => {
         });
       });
     } else {
-      it.only(// eslint-disable-next-line jest/valid-title
+      it(// eslint-disable-next-line jest/valid-title
       `calls lib functions:: pre-staged: ${test.preStagedPaths.length} added: ${
         test.stagePaths.length
       } scope-arg: ${argName} first-arg: ${
