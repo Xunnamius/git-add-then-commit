@@ -73,6 +73,10 @@ export function configureProgram(program?: Program): Context {
         alias: 's',
         describe: 'Nothing will be printed to stdout or stderr',
         type: 'boolean'
+      },
+      force: {
+        describe: 'Always stage paths even when doing so could damage the index',
+        type: 'boolean'
       }
     })
     .string('_')
@@ -149,11 +153,37 @@ export function configureProgram(program?: Program): Context {
         : params;
 
       let message = `${commitType}(${commitScope}): ${commitMessage}`;
+      debug(`initial message: ${message}`);
 
-      await stagePaths(newPaths);
+      if (preStagedPaths.length) {
+        if (!finalArgv.force) {
+          debug('performing dangerous operation check');
 
-      // * This check may not be necessary if stagePaths always throws on error
+          // ? We transform each path arg into all the full paths it represents
+          // ? **conditioned on the currently (i.e. "pre-") staged paths**. If any
+          // ? of the path args reference pre-staged paths and --force is not in
+          // ? effect, error rather than clobber the index with bad state
+          const indexIsInDanger = (
+            await Promise.allSettled(passedPaths.map((p) => fullname(p)))
+          )
+            .filter(
+              (r): r is PromiseFulfilledResult<FullnameResult> => r.status == 'fulfilled'
+            )
+            .flatMap(({ value }) => (value.ambiguous ? value.files : value.file))
+            .some((fullPassedPath) => preStagedPaths.includes(fullPassedPath));
+
+          if (indexIsInDanger) {
+            throw new Error(
+              'dangerous operation rejected: "git add" could clobber index state ' +
+                '(can be overridden with --force)'
+            );
+          }
+        } else debug('WARNING: skipping dangerous operation check!');
+      }
+
+      await stagePaths(passedPaths);
       const latestStagedPaths = await getStagedPaths();
+
       if (!latestStagedPaths.length) throw new Error('assert failed: nothing to commit');
 
       if (!commitScope) {
