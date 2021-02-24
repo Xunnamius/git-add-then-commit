@@ -101,12 +101,12 @@ Defined in: [src/index.ts:38][10]
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/7b9686d/src/index.ts#L22
+  https://github.com/Xunnamius/git-add-then-commit/blob/a4120b2/src/index.ts#L22
 [7]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/7b9686d/src/index.ts#L20
+  https://github.com/Xunnamius/git-add-then-commit/blob/a4120b2/src/index.ts#L20
 [8]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/7b9686d/src/index.ts#L18
+  https://github.com/Xunnamius/git-add-then-commit/blob/a4120b2/src/index.ts#L18
 [9]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/7b9686d/src/index.ts#L32
+  https://github.com/Xunnamius/git-add-then-commit/blob/a4120b2/src/index.ts#L32
 [10]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/7b9686d/src/index.ts#L38
+  https://github.com/Xunnamius/git-add-then-commit/blob/a4120b2/src/index.ts#L38
