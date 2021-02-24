@@ -24,7 +24,7 @@ export type Context = {
   parse: Parser;
 };
 
-const debug = debugFactory(`${pkgName}:index`);
+const debug = debugFactory(`${pkgName}:parse`);
 
 /**
  * Create and return a pre-configured Yargs instance (program) and argv parser.
@@ -117,7 +117,7 @@ export function configureProgram(program?: Program): Context {
         a == '-' ? '-o' : a == '--' ? '-b' : a
       );
 
-      debug('parse: saw argv: %O', argv);
+      debug('saw argv: %O', argv);
       const finalArgv = finalProgram.parse(argv);
 
       let shouldDeriveScope = false;
@@ -136,7 +136,7 @@ export function configureProgram(program?: Program): Context {
         throw new Error('not a git repository (or any of the parent directories): .git');
 
       const preStagedPaths = await getStagedPaths();
-      debug('parse: pre-staged paths: %O', preStagedPaths);
+      debug('pre-staged paths: %O', preStagedPaths);
 
       if (finalArgv._.length == minArgCount && !preStagedPaths.length)
         throw new Error('must stage a file or pass a path. See --help for details');
@@ -157,7 +157,7 @@ export function configureProgram(program?: Program): Context {
       if (!latestStagedPaths.length) throw new Error('assert failed: nothing to commit');
 
       if (!commitScope) {
-        debug('parse: deriving commit scope based on rules: %O', finalArgv);
+        debug('deriving commit scope based on rules: %O', finalArgv);
 
         if (finalArgv.scopeOmit) {
           debug('deriving as omit');
