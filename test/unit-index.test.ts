@@ -607,7 +607,7 @@ describe('::configureProgram', () => {
                 ? '--scope-basename'
                 : '--scope-as-is'
             );
-            expect(mockedFullname).toBeCalledTimes(test.preStagedPaths.length);
+            expect(mockedFullname).toBeCalledTimes(test.passedPaths.length);
             expect(mockedStagePaths).toBeCalledWith([]);
             // eslint-disable-next-line jest/no-conditional-expect
             argName == 'scopeFull' && expect(mockedCommonAncestor).toBeCalled();
