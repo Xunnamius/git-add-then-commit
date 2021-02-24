@@ -133,14 +133,14 @@ export function configureProgram(program?: Program): Context {
       if (!(await isGitRepo()))
         throw new Error('not a git repository (or any of the parent directories): .git');
 
-      const oldStagedPaths = await getStagedPaths();
-      debug('parse: pre-staged paths: %O', oldStagedPaths);
+      const preStagedPaths = await getStagedPaths();
+      debug('parse: pre-staged paths: %O', preStagedPaths);
 
-      if (finalArgv._.length == minArgCount && !oldStagedPaths.length)
+      if (finalArgv._.length == minArgCount && !preStagedPaths.length)
         throw new Error('must stage a file or pass a path. See --help for details');
 
       const params = Array.from(finalArgv._).map(String);
-      const newPaths = params.splice(0, params.length - (shouldDeriveScope ? 2 : 3));
+      const passedPaths = params.splice(0, params.length - (shouldDeriveScope ? 2 : 3));
       const [commitType, commitScope, commitMessage] = shouldDeriveScope
         ? // eslint-disable-next-line no-sparse-arrays
           [params[0], , params[1]]
@@ -157,13 +157,17 @@ export function configureProgram(program?: Program): Context {
       if (!commitScope) {
         debug('parse: deriving commit scope based on rules: %O', finalArgv);
 
-        if (finalArgv.scopeOmit) message = `${commitType}: ${commitMessage}`;
-        else {
+        if (finalArgv.scopeOmit) {
+          debug('deriving as omit');
+          message = `${commitType}: ${commitMessage}`;
+        } else {
           let computedScope: string;
 
           if (finalArgv.scopeBasename) {
-            if (newPaths.length) {
-              const firstPath = newPaths[0];
+            debug('deriving as basename');
+
+            if (passedPaths.length) {
+              const firstPath = passedPaths[0];
               const result = await fullname(firstPath);
 
               if (result.ambiguous)
@@ -183,6 +187,8 @@ export function configureProgram(program?: Program): Context {
 
             computedScope = computedScope.toLowerCase();
           } else if (finalArgv.scopeFull) {
+            debug('deriving as full');
+
             const getAncestor = (files: string[]) => {
               const ancestor = commonAncestor(files);
               if (!ancestor) {
@@ -193,8 +199,8 @@ export function configureProgram(program?: Program): Context {
               return ancestor;
             };
 
-            if (newPaths.length) {
-              const result = await fullname(newPaths[0]);
+            if (passedPaths.length) {
+              const result = await fullname(passedPaths[0]);
               computedScope = result.ambiguous ? getAncestor(result.files) : result.file;
             } else {
               // staged.length == 0 is impossible b/c yargs check() validation
@@ -204,9 +210,10 @@ export function configureProgram(program?: Program): Context {
 
             computedScope = computedScope.toLowerCase();
           } else {
-            // * scopeAsIs
-            if (newPaths.length) {
-              computedScope = newPaths[0];
+            debug('deriving as as-is');
+
+            if (passedPaths.length) {
+              computedScope = passedPaths[0];
             } else
               throw new Error('use of --scope-as-is without path argument is ambiguous');
           }
