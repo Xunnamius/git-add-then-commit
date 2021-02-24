@@ -407,16 +407,23 @@ describe('::configureProgram', () => {
 
     mockStagedPaths.clear();
     mockStagedPaths.add('b/file1.js');
+    mockStagedPaths.add('c/file1.js');
 
     mockedFullname.mockReturnValueOnce(
-      Promise.resolve({ ambiguous: false, file: 'b/file1.js' })
+      Promise.resolve({ ambiguous: true, files: ['b/file2.js', 'b/file1.js'] })
+    );
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'c/file1.js' })
     );
 
     await withMocks(async () => {
-      await expect(runProgram(['b', 'type', '--', 'message'])).rejects.toMatchObject({
-        message: expect.toInclude('dangerous operation rejected')
-      });
-      expect(mockedFullname).toBeCalledTimes(1);
+      await expect(runProgram(['b', 'c', 'type', '--', 'message'])).rejects.toMatchObject(
+        {
+          message: expect.toInclude('dangerous operation rejected')
+        }
+      );
+      expect(mockedFullname).toBeCalledTimes(2);
     });
   });
 
