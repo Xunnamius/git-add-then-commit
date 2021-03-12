@@ -753,7 +753,6 @@ jobs:
       - name: 'Merge pull request'
         uses: 'actions/github-script@v3.1'
         with:
-          github-token: ${{ secrets.GH_TOKEN }}
           script: |
             const MAX_RETRIES = 6;
             const MINIMUM_SECONDS = 10;
