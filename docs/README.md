@@ -101,6 +101,7 @@ Defined in: [src/index.ts:38][10]
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
+<<<<<<< HEAD
   https://github.com/Xunnamius/git-add-then-commit/blob/2efbda3/src/index.ts#L22
 [7]:
   https://github.com/Xunnamius/git-add-then-commit/blob/2efbda3/src/index.ts#L20
@@ -110,3 +111,14 @@ Defined in: [src/index.ts:38][10]
   https://github.com/Xunnamius/git-add-then-commit/blob/2efbda3/src/index.ts#L32
 [10]:
   https://github.com/Xunnamius/git-add-then-commit/blob/2efbda3/src/index.ts#L38
+=======
+  https://github.com/Xunnamius/git-add-then-commit/blob/bf9e348/src/index.ts#L22
+[7]:
+  https://github.com/Xunnamius/git-add-then-commit/blob/bf9e348/src/index.ts#L20
+[8]:
+  https://github.com/Xunnamius/git-add-then-commit/blob/bf9e348/src/index.ts#L18
+[9]:
+  https://github.com/Xunnamius/git-add-then-commit/blob/bf9e348/src/index.ts#L32
+[10]:
+  https://github.com/Xunnamius/git-add-then-commit/blob/bf9e348/src/index.ts#L38
+>>>>>>> 6f469b1... chore: update build-docs
