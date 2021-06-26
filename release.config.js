@@ -1,19 +1,18 @@
+'use strict';
+
 const debug = require('debug')(
   `${require('./package.json').name}:semantic-release-config`
 );
 
-const SHOULD_UPDATE_CHANGELOG = process.env.SHOULD_UPDATE_CHANGELOG === 'true';
-const SHOULD_DEPLOY = process.env.SHOULD_DEPLOY === 'true';
+// TODO: turn this into @xunnamius/semantic-release-projector-config
 
-debug(`SHOULD_UPDATE_CHANGELOG:${SHOULD_UPDATE_CHANGELOG}`);
-debug(`SHOULD_DEPLOY:${SHOULD_DEPLOY}`);
+const updateChangelog =
+  process.env.SHOULD_UPDATE_CHANGELOG === 'true' ||
+  process.env.UPDATE_CHANGELOG === 'true';
 
-const {
-  changelogTitle,
-  parserOpts,
-  writerOpts,
-  additionalReleaseRules
-} = require('./.changelogrc.js');
+debug(`will update changelog: ${updateChangelog ? 'yes' : 'no'}`);
+
+const { changelogTitle, parserOpts, writerOpts } = require('./conventional.config.js');
 
 module.exports = {
   branches: [
@@ -29,20 +28,28 @@ module.exports = {
     [
       '@semantic-release/commit-analyzer',
       {
-        preset: 'angular',
         parserOpts,
-        releaseRules: additionalReleaseRules
+        releaseRules: [
+          // ? releaseRules are checked first; if none match, defaults are
+          // ? checked next.
+
+          // ! These two lines must always appear first and in order:
+          { breaking: true, release: 'major' },
+          { revert: true, release: 'patch' },
+
+          // * Custom release rules, if any, may appear next:
+          { type: 'build', release: 'patch' }
+        ]
       }
     ],
     [
       '@semantic-release/release-notes-generator',
       {
-        preset: 'angular',
         parserOpts,
         writerOpts
       }
     ],
-    ...(SHOULD_UPDATE_CHANGELOG
+    ...(updateChangelog
       ? [
           [
             '@semantic-release/exec',
@@ -80,17 +87,7 @@ module.exports = {
         message: 'release: ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
       }
     ],
-    ['@semantic-release/github'],
-    ...(SHOULD_DEPLOY
-      ? [
-          [
-            '@semantic-release/exec',
-            {
-              successCmd: 'npm run deploy'
-            }
-          ]
-        ]
-      : [])
+    ['@semantic-release/github']
   ]
 };
 
