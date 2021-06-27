@@ -15,85 +15,103 @@
 
 ### Arguments
 
-Ƭ **Arguments**\<T>: T & { \[argName: string]: _unknown_; `$0`: _string_ ; `_`:
-(_string_ | _number_)\[] }
+Ƭ **Arguments**<`T`>: `T` & { \[argName: string]: `unknown`; `$0`: `string` ;
+`_`: (`string` | `number`)\[] }
 
-#### Type parameters:
+#### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | {}      |
+| Name | Type |
+| :--- | :--- |
+| `T`  | {}   |
 
-Defined in: node_modules/@types/yargs/index.d.ts:641
+#### Defined in
+
+node_modules/@types/yargs/index.d.ts:641
 
 ---
 
 ### Context
 
-Ƭ **Context**: _object_
+Ƭ **Context**: `Object`
 
-#### Type declaration:
+#### Type declaration
 
 | Name      | Type           |
 | :-------- | :------------- |
-| `parse`   | [_Parser_][3]  |
-| `program` | [_Program_][4] |
+| `parse`   | [`Parser`][3]  |
+| `program` | [`Program`][4] |
 
-Defined in: [src/index.ts:22][6]
+#### Defined in
+
+[src/index.ts:22][6]
 
 ---
 
 ### Parser
 
-Ƭ **Parser**: (`argv?`: _string_\[]) => _Promise_<[_Arguments_][1]>
+Ƭ **Parser**: (`argv?`: `string`\[]) => `Promise`<[`Arguments`][1]>
 
-#### Type declaration:
+#### Type declaration
 
-▸ (`argv?`: _string_\[]): _Promise_<[_Arguments_][1]>
+▸ (`argv?`): `Promise`<[`Arguments`][1]>
 
-#### Parameters:
+##### Parameters
 
 | Name    | Type       |
 | :------ | :--------- |
-| `argv?` | _string_[] |
+| `argv?` | `string`[] |
 
-**Returns:** _Promise_<[_Arguments_][1]>
+##### Returns
 
-Defined in: [src/index.ts:20][7]
+`Promise`<[`Arguments`][1]>
+
+#### Defined in
+
+[src/index.ts:20][7]
 
 ---
 
 ### Program
 
-Ƭ **Program**: Argv
+Ƭ **Program**: `Argv`
 
-Defined in: [src/index.ts:18][8]
+#### Defined in
+
+[src/index.ts:18][8]
 
 ## Functions
 
 ### configureProgram
 
-▸ **configureProgram**(): [_Context_][2]
+▸ **configureProgram**(): [`Context`][2]
 
 Create and return a pre-configured Yargs instance (program) and argv parser.
 
-**Returns:** [_Context_][2]
+#### Returns
 
-Defined in: [src/index.ts:32][9]
+[`Context`][2]
 
-▸ **configureProgram**(`program`: [_Program_][4]): [_Context_][2]
+#### Defined in
+
+[src/index.ts:32][9]
+
+▸ **configureProgram**(`program`): [`Context`][2]
 
 Configure an existing Yargs instance (program) and return an argv parser.
 
-#### Parameters:
+#### Parameters
 
 | Name      | Type           | Description                   |
 | :-------- | :------------- | :---------------------------- |
-| `program` | [_Program_][4] | A Yargs instance to configure |
+| `program` | [`Program`][4] | A Yargs instance to configure |
 
-**Returns:** [_Context_][2]
+#### Returns
 
-Defined in: [src/index.ts:38][10]
+[`Context`][2]
+
+#### Defined in
+
+[src/index.ts:38][10]
 
 [1]: README.md#arguments
 [2]: README.md#context
@@ -101,12 +119,12 @@ Defined in: [src/index.ts:38][10]
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/9386681/src/index.ts#L22
+  https://github.com/Xunnamius/git-add-then-commit/blob/c57178b/src/index.ts#L22
 [7]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/9386681/src/index.ts#L20
+  https://github.com/Xunnamius/git-add-then-commit/blob/c57178b/src/index.ts#L20
 [8]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/9386681/src/index.ts#L18
+  https://github.com/Xunnamius/git-add-then-commit/blob/c57178b/src/index.ts#L18
 [9]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/9386681/src/index.ts#L32
+  https://github.com/Xunnamius/git-add-then-commit/blob/c57178b/src/index.ts#L32
 [10]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/9386681/src/index.ts#L38
+  https://github.com/Xunnamius/git-add-then-commit/blob/c57178b/src/index.ts#L38
