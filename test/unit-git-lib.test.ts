@@ -27,15 +27,15 @@ const mockedCommit = asMockedFunction<SimpleGit['commit']>();
 const mockedStatus = asMockedFunction<SimpleGit['status']>();
 const mockedCheckIsRepo = asMockedFunction<SimpleGit['checkIsRepo']>();
 
-const mockGit = ({
+const mockGit = {
   add: mockedAdd,
   commit: mockedCommit,
   status: mockedStatus,
   checkIsRepo: mockedCheckIsRepo
-} as unknown) as SimpleGit;
+} as unknown as SimpleGit;
 
 mockedCommit.mockImplementation(
-  () => (mockCommitResult as unknown) as Response<CommitResult>
+  () => mockCommitResult as unknown as Response<CommitResult>
 );
 
 mockedGit.mockImplementation(() => mockGit);
@@ -81,7 +81,7 @@ describe('::makeCommit', () => {
     expect.hasAssertions();
 
     mockedExeca.mockImplementationOnce(
-      () => (Promise.resolve() as unknown) as ReturnType<typeof mockedExeca>
+      () => Promise.resolve() as unknown as ReturnType<typeof mockedExeca>
     );
 
     await lib.makeCommit('type(scope): message');
@@ -101,7 +101,7 @@ describe('::makeCommit', () => {
     expect.hasAssertions();
 
     mockedExeca.mockImplementationOnce(
-      () => (Promise.reject() as unknown) as ReturnType<typeof mockedExeca>
+      () => Promise.reject() as unknown as ReturnType<typeof mockedExeca>
     );
 
     await expect(lib.makeCommit('type(scope): message')).rejects.toMatchObject({
@@ -165,9 +165,9 @@ describe('::getStagedPaths', () => {
       ]
     ];
 
-    mockedStatus.mockReturnValueOnce(({
+    mockedStatus.mockReturnValueOnce({
       files: stagedPathData.map((p) => p[1])
-    } as unknown) as Response<StatusResult>);
+    } as unknown as Response<StatusResult>);
 
     expect(await lib.getStagedPaths()).toStrictEqual(
       stagedPathData.flatMap((p) => (['?', ' '].includes(p[1].index) ? [] : p[0]))
@@ -182,16 +182,16 @@ describe('::fullname', () => {
 
     mockedExeca.mockImplementationOnce(
       () =>
-        (({
+        ({
           stdout: 'non/ambiguous/dir/path/to/files/file1.js'
-        } as unknown) as ExecaChildProcess<Buffer>)
+        } as unknown as ExecaChildProcess<Buffer>)
     );
 
     mockedExeca.mockImplementationOnce(
       () =>
-        (({
+        ({
           stdout: ''
-        } as unknown) as ExecaChildProcess<Buffer>)
+        } as unknown as ExecaChildProcess<Buffer>)
     );
 
     expect(await lib.fullname('non/ambiguous/dir/path')).toStrictEqual({
@@ -203,16 +203,16 @@ describe('::fullname', () => {
 
     mockedExeca.mockImplementationOnce(
       () =>
-        (({
+        ({
           stdout: 'non/ambiguous/dir/path/to/files/file1.js'
-        } as unknown) as ExecaChildProcess<Buffer>)
+        } as unknown as ExecaChildProcess<Buffer>)
     );
 
     mockedExeca.mockImplementationOnce(
       () =>
-        (({
+        ({
           stdout: 'non/ambiguous/dir/path/to/files/file1.js'
-        } as unknown) as ExecaChildProcess<Buffer>)
+        } as unknown as ExecaChildProcess<Buffer>)
     );
 
     expect(await lib.fullname('non/ambiguous/dir/path/to/files/file1.js')).toStrictEqual({
@@ -228,23 +228,23 @@ describe('::fullname', () => {
 
     mockedExeca.mockImplementationOnce(
       () =>
-        (({
+        ({
           stdout:
             'ambiguous/dir/path/to/files/file1.js\n' +
             'ambiguous/dir/path/to/files/file2.js\n' +
             'ambiguous/dir/to/file3.js'
-        } as unknown) as ExecaChildProcess<Buffer>)
+        } as unknown as ExecaChildProcess<Buffer>)
     );
 
     mockedExeca.mockImplementationOnce(
       () =>
-        (({
+        ({
           stdout:
             'ambiguous/dir/path/to/files/file4.js\n' +
             'ambiguous/dir/path/to/files/file2.js\n' +
             'ambiguous/dir/path/to/files/file5.js\n' +
             'ambiguous/dir/to/file3.js'
-        } as unknown) as ExecaChildProcess<Buffer>)
+        } as unknown as ExecaChildProcess<Buffer>)
     );
 
     expect(await lib.fullname('ambiguous/dir/path')).toStrictEqual({
@@ -265,11 +265,11 @@ describe('::fullname', () => {
     expect.hasAssertions();
 
     mockedExeca.mockImplementationOnce(
-      () => (Promise.resolve({ stdout: '' }) as unknown) as ExecaChildProcess<Buffer>
+      () => Promise.resolve({ stdout: '' }) as unknown as ExecaChildProcess<Buffer>
     );
 
     mockedExeca.mockImplementationOnce(
-      () => (Promise.resolve({ stdout: '' }) as unknown) as ExecaChildProcess<Buffer>
+      () => Promise.resolve({ stdout: '' }) as unknown as ExecaChildProcess<Buffer>
     );
 
     await expect(lib.fullname('non-existent/dir/path')).rejects.toMatchObject({

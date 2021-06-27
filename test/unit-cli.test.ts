@@ -17,10 +17,10 @@ const protectedImport = protectedImportFactory(CLI_PATH);
 const mockedParse = jest.fn(async () => ({}));
 const mockedConfigureProgram = asMockedFunction(configureProgram).mockImplementation(
   () =>
-    (({
+    ({
       program: { argv: { silent: mockSilent } },
       parse: mockedParse
-    } as unknown) as Context)
+    } as unknown as Context)
 );
 
 afterEach(() => {

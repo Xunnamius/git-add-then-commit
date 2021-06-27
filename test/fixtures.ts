@@ -7,7 +7,7 @@ const Paths = {
   short: ['path'] as PathActual,
   full: ['path/to/file2'] as PathActual,
   double: ['path', 'file1'] as PathActual,
-  empty: ([] as unknown) as PathActual
+  empty: [] as unknown as PathActual
 };
 
 // ? Actual paths as they would exist on a filesystem
@@ -88,19 +88,21 @@ const preStagePathsNames = new WeakMap();
 // ? Record human-readable name for each preset (*ACTUAL* preset path)
 addPathsKeys.forEach((k) => preStagePathsNames.set(Paths[k].actual, k));
 
-const tests = ([
-  ['scope', OptionsMeta.testScope],
-  ['-', OptionsMeta.scopeOmit],
-  ['--', OptionsMeta.scopeBasename],
-  ['-o', OptionsMeta.scopeOmit],
-  ['-a', OptionsMeta.scopeAsIs],
-  ['-b', OptionsMeta.scopeBasename],
-  ['-f', OptionsMeta.scopeFull],
-  ['--scope-omit', OptionsMeta.scopeOmit],
-  ['--scope-as-is', OptionsMeta.scopeAsIs],
-  ['--scope-basename', OptionsMeta.scopeBasename],
-  ['--scope-full', OptionsMeta.scopeFull]
-] as [string, typeof OptionsMeta.value][])
+const tests = (
+  [
+    ['scope', OptionsMeta.testScope],
+    ['-', OptionsMeta.scopeOmit],
+    ['--', OptionsMeta.scopeBasename],
+    ['-o', OptionsMeta.scopeOmit],
+    ['-a', OptionsMeta.scopeAsIs],
+    ['-b', OptionsMeta.scopeBasename],
+    ['-f', OptionsMeta.scopeFull],
+    ['--scope-omit', OptionsMeta.scopeOmit],
+    ['--scope-as-is', OptionsMeta.scopeAsIs],
+    ['--scope-basename', OptionsMeta.scopeBasename],
+    ['--scope-full', OptionsMeta.scopeFull]
+  ] as [string, typeof OptionsMeta.value][]
+)
   .flatMap(([scopeArg, optionsMeta]) =>
     preStagePaths.flatMap((preStagedPaths) =>
       addPathsKeys.flatMap((addPathsKey) => {
@@ -138,7 +140,7 @@ export type Fixtures = typeof tests & {
 };
 
 // ? The test configuration objects (fixtures) imported by various test suites
-const fixtures = ([
+const fixtures = [
   ...tests,
   ...[
     ['--scope-full', 'path', 'file1', 'type', 'the message'],
@@ -155,7 +157,7 @@ const fixtures = ([
     commitMessage: 'type(path/to/file2): the message',
     titleSuffix: 'preset=custom,post_test=true'
   }))
-] as unknown) as Fixtures;
+] as unknown as Fixtures;
 
 fixtures.meta = {
   options: OptionsMeta,
