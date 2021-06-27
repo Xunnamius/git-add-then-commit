@@ -7,10 +7,12 @@
 [![Last commit timestamp][badge-last-commit]][link-repo]
 [![Open issues][badge-issues]][link-issues]
 [![Pull requests][badge-pulls]][link-pulls]
-[![codecov][badge-codecov]][link-codecov]
+[![Codecov][badge-codecov]][link-codecov]
 [![Source license][badge-license]][link-license]
+[![Tree shaking support][badge-tree-shaking]][link-bundlephobia]
+[![Compressed package size][badge-size]][link-bundlephobia]
 [![NPM version][badge-npm]][link-npm]
-[![semantic-release][badge-semantic-release]][link-semantic-release]
+[![Uses Semantic Release!][badge-semantic-release]][link-semantic-release]
 
 <!-- badges-end -->
 
@@ -223,6 +225,13 @@ information.
   https://codecov.io/gh/Xunnamius/git-add-then-commit/branch/main/graph/badge.svg?token=HWRIOBAAPW
   'Is this package well-tested?'
 [link-codecov]: https://codecov.io/gh/Xunnamius/git-add-then-commit
+[badge-size]: https://badgen.net/bundlephobia/minzip/next-test-api-route-handler
+[badge-tree-shaking]:
+  https://badgen.net/bundlephobia/tree-shaking/next-test-api-route-handler
+  'Is this package optimized for Webpack?'
+[link-bundlephobia]:
+  https://bundlephobia.com/result?p=next-test-api-route-handler
+  'Package size (minified and gzipped)'
 [package-json]: package.json
 [badge-license]:
   https://img.shields.io/npm/l/git-add-then-commit
