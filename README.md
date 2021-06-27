@@ -225,12 +225,12 @@ information.
   https://codecov.io/gh/Xunnamius/git-add-then-commit/branch/main/graph/badge.svg?token=HWRIOBAAPW
   'Is this package well-tested?'
 [link-codecov]: https://codecov.io/gh/Xunnamius/git-add-then-commit
-[badge-size]: https://badgen.net/bundlephobia/minzip/next-test-api-route-handler
+[badge-size]: https://badgen.net/bundlephobia/minzip/git-add-then-commit
 [badge-tree-shaking]:
-  https://badgen.net/bundlephobia/tree-shaking/next-test-api-route-handler
+  https://badgen.net/bundlephobia/tree-shaking/git-add-then-commit
   'Is this package optimized for Webpack?'
 [link-bundlephobia]:
-  https://bundlephobia.com/result?p=next-test-api-route-handler
+  https://bundlephobia.com/result?p=git-add-then-commit
   'Package size (minified and gzipped)'
 [package-json]: package.json
 [badge-license]:
