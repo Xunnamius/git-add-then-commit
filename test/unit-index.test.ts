@@ -170,7 +170,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('calls to Context::parse transform aliases properly #1', async () => {
+  it('calls to Context::parse transform aliases properly (-)', async () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
@@ -180,7 +180,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('calls to Context::parse transform aliases properly #2', async () => {
+  it('calls to Context::parse transform aliases properly (--)', async () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
@@ -195,7 +195,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('calls to Context::parse transform aliases properly #3', async () => {
+  it('calls to Context::parse transform aliases properly (--) #2', async () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
