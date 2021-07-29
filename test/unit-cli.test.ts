@@ -5,26 +5,23 @@ import type { Context } from '../src/index';
 
 const CLI_PATH = '../src/cli';
 
-// ! Note:
-// !   - jest.mock calls are hoisted to the top even above imports
-// !   - factory function of jest.mock(...) is not guaranteed to run early
-// !   - better to manipulate mock in beforeAll() vs using a factory function
 jest.mock('../src/index');
 
 let mockSilent = false;
 
 const protectedImport = protectedImportFactory(CLI_PATH);
-const mockedParse = jest.fn(async () => ({}));
-const mockedConfigureProgram = asMockedFunction(configureProgram).mockImplementation(
-  () =>
-    ({
-      program: { argv: { silent: mockSilent } },
-      parse: mockedParse
-    } as unknown as Context)
-);
+const mockedParse = jest.fn();
+const mockedConfigureProgram = asMockedFunction(configureProgram);
 
-afterEach(() => {
-  jest.clearAllMocks();
+beforeEach(() => {
+  mockedParse.mockImplementation(async () => ({}));
+  mockedConfigureProgram.mockImplementation(
+    () =>
+      ({
+        program: { argv: { silent: mockSilent } },
+        parse: mockedParse
+      } as unknown as Context)
+  );
 });
 
 it('executes program on import', async () => {

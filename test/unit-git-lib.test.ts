@@ -5,10 +5,6 @@ import execa, { ExecaChildProcess } from 'execa';
 
 import type { SimpleGit, StatusResult, Response, CommitResult } from 'simple-git';
 
-// ! Note:
-// !   - jest.mock calls are hoisted to the top even above imports
-// !   - factory function of jest.mock(...) is not guaranteed to run early
-// !   - better to manipulate mock in beforeAll() vs using a factory function
 jest.mock('simple-git');
 jest.mock('execa');
 
@@ -34,14 +30,12 @@ const mockGit = {
   checkIsRepo: mockedCheckIsRepo
 } as unknown as SimpleGit;
 
-mockedCommit.mockImplementation(
-  () => mockCommitResult as unknown as Response<CommitResult>
-);
+beforeEach(() => {
+  mockedCommit.mockImplementation(
+    () => mockCommitResult as unknown as Response<CommitResult>
+  );
 
-mockedGit.mockImplementation(() => mockGit);
-
-afterEach(() => {
-  jest.clearAllMocks();
+  mockedGit.mockImplementation(() => mockGit);
 });
 
 describe('::stagePaths', () => {

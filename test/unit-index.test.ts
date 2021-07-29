@@ -13,10 +13,6 @@ import {
 
 import type { Context } from '../src/index';
 
-// ! Note:
-// !   - jest.mock calls are hoisted to the top even above imports
-// !   - factory function of jest.mock(...) is not guaranteed to run early
-// !   - better to manipulate mock in beforeAll() vs using a factory function
 jest.mock('../src/git-lib');
 
 const mockStagedPaths = new Set<string>();
@@ -26,9 +22,6 @@ const mockedGetStagedPaths = asMockedFunction(getStagedPaths);
 const mockedIsGitRepo = asMockedFunction(isGitRepo);
 const mockedMakeCommit = asMockedFunction(makeCommit);
 const mockedStagePaths = asMockedFunction(stagePaths);
-
-mockedGetStagedPaths.mockImplementation(async () => Array.from(mockStagedPaths));
-mockedIsGitRepo.mockReturnValue(Promise.resolve(true));
 
 const getProgram = () => {
   const ctx = configureProgram();
@@ -50,11 +43,12 @@ const withMocks = async (
 beforeEach(() => {
   mockStagedPaths.add('some-random-file'); // ? Needs to be >=1 staged or else!
   mockedFullname.mockImplementation(() => Promise.reject('top-level error'));
+  mockedGetStagedPaths.mockImplementation(async () => Array.from(mockStagedPaths));
+  mockedIsGitRepo.mockReturnValue(Promise.resolve(true));
 });
 
 afterEach(() => {
   mockStagedPaths.clear();
-  jest.clearAllMocks();
 });
 
 describe('::configureProgram', () => {

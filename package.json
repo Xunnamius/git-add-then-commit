@@ -125,7 +125,9 @@
     ],
     "testRunner": "jest-circus/runner",
     "testTimeout": 60000,
-    "verbose": false
+    "verbose": false,
+    "resetMocks": true,
+    "restoreMocks": true
   },
   "dependencies": {
     "common-ancestor-path": "^1.0.1",
