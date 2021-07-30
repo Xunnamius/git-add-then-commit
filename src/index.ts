@@ -70,6 +70,11 @@ export function configureProgram(program?: Program): Context {
         describe: 'Use path1 (relative to repo root) as the scope',
         type: 'boolean'
       },
+      'scope-root': {
+        alias: 'r',
+        describe: 'Use path1 to derive a photogenic scope',
+        type: 'boolean'
+      },
       silent: {
         alias: 's',
         describe: 'Nothing will be printed to stdout or stderr',
@@ -87,7 +92,7 @@ export function configureProgram(program?: Program): Context {
     })
     .string('_')
     .group(
-      ['scope-omit', 'scope-basename', 'scope-as-is', 'scope-full'],
+      ['scope-omit', 'scope-basename', 'scope-as-is', 'scope-full', 'scope-root'],
       'Scope options:'
     )
     .epilogue(
@@ -114,6 +119,10 @@ export function configureProgram(program?: Program): Context {
         'Stages file1 & commits as "feat(path/to/file1): new feature"'
       ],
       [
+        '$0 path feat --scope-root "new feature"',
+        'Stages file1 & file2 & commits as "feat(path): new feature"'
+      ],
+      [
         '$0 chore scripts "update var names"',
         'Commits (all staged files) as "chore(scripts): update var names"'
       ]
@@ -124,16 +133,22 @@ export function configureProgram(program?: Program): Context {
     program: finalProgram,
     parse: async (argv?: string[]) => {
       argv = (argv?.length ? argv : process.argv.slice(2)).map((a) =>
-        a == '-' ? '-o' : a == '--' ? '-b' : a
+        a == '-' ? '-o' : a == '--' ? '-b' : a == '---' ? '-r' : a
       );
 
       debug('saw argv: %O', argv);
       const finalArgv = await finalProgram.parse(argv);
 
       let shouldDeriveScope = false;
-      const opCount = ['scopeOmit', 'scopeBasename', 'scopeAsIs', 'scopeFull'].filter(
-        (a) => a in finalArgv
-      ).length;
+
+      const opCount = [
+        'scopeOmit',
+        'scopeBasename',
+        'scopeAsIs',
+        'scopeFull',
+        'scopeRoot'
+      ].filter((a) => a in finalArgv).length;
+
       const minArgCount = !!(shouldDeriveScope = !!opCount) ? 2 : 3;
 
       if (opCount > 1)
@@ -224,14 +239,17 @@ export function configureProgram(program?: Program): Context {
             }
 
             computedScope = computedScope.toLowerCase();
-          } else if (finalArgv.scopeFull) {
-            debug('deriving as full');
+          } else if (finalArgv.scopeFull || finalArgv.scopeRoot) {
+            const scope = finalArgv.scopeRoot ? 'root' : 'full';
+            debug(`deriving as ${scope}`);
 
             const getAncestor = (files: string[]) => {
               const ancestor = commonAncestor(files);
               if (!ancestor) {
                 throw new Error(
-                  'use of --scope-full is ambiguous without common non-root ancestor path'
+                  `use of --scope-${scope} is ambiguous without common non-root ${
+                    finalArgv.scopeFull ? 'ancestor' : 'first directory in path'
+                  }`
                 );
               }
               return ancestor;
@@ -239,14 +257,24 @@ export function configureProgram(program?: Program): Context {
 
             if (passedPaths.length) {
               const result = await fullname(passedPaths[0]);
-              computedScope = result.ambiguous ? getAncestor(result.files) : result.file;
+              if (result.ambiguous) {
+                computedScope = getAncestor(result.files);
+              } else {
+                const path = parsePath(result.file);
+                computedScope =
+                  finalArgv.scopeRoot && !path.dir ? path.name : result.file;
+              }
             } else {
               // staged.length == 0 is impossible b/c yargs check() validation
               if (latestStagedPaths.length == 1) computedScope = latestStagedPaths[0];
               else computedScope = getAncestor(latestStagedPaths);
             }
 
-            computedScope = computedScope.toLowerCase();
+            computedScope = (
+              finalArgv.scopeRoot
+                ? computedScope.split('/').filter(Boolean)[0]
+                : computedScope
+            ).toLowerCase();
           } else {
             debug('deriving as as-is');
 
