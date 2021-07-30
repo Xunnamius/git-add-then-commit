@@ -283,7 +283,36 @@ it('commits verbosely if not called with --silent', async () => {
   });
 });
 
-it('--scope-basename works with ambiguous first path arg', async () => {
+it('skips verification when --no-verify encountered', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root }) => {
+    await writeFile(`${root}/.git/hooks/pre-commit`, '#!/bin/sh\nexit 1');
+    await run('chmod', ['+x', `${root}/.git/hooks/pre-commit`]);
+
+    let { code, stdout, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'type', 'scope', 'message', '--no-verify'],
+      { cwd: root }
+    );
+
+    expect(code).toBe(1);
+    expect(stdout).toBeEmpty();
+    expect(stderr).not.toBeEmpty();
+
+    ({ code, stdout, stderr } = await run(
+      CLI_BIN_PATH,
+      ['path', 'type', 'scope', 'message', '--no-verify'],
+      { cwd: root }
+    ));
+
+    expect(code).toBe(0);
+    expect(stdout).not.toBeEmpty();
+    expect(stderr).toBeEmpty();
+  });
+});
+
+it('--scope-basename errors with ambiguous first path arg', async () => {
   expect.hasAssertions();
 
   await withMockedFixture(async ({ root }) => {
@@ -348,10 +377,11 @@ it('--scope-full works with ambiguous first path arg with common ancestor', asyn
     const commit = await git.show();
     expect(commit).toInclude('type(path/to): message');
     expect(commit).toInclude('a/path/to/file2');
+    expect(commit).toInclude('a/path/to/file3');
   });
 });
 
-it('--scope-full works with staged paths with no common ancestor and with no path args', async () => {
+it('--scope-full errors with staged paths with no common ancestor and with no path args', async () => {
   expect.hasAssertions();
 
   await withMockedFixture(async ({ root, git }) => {
@@ -406,6 +436,101 @@ it('--scope-full works with single staged path with no path args', async () => {
     const commit = await git.show();
     expect(commit).toInclude('type(path/to/file2): message');
     expect(commit).toInclude('a/path/to/file2');
+  });
+});
+
+it('--scope-root works with non-ambiguous first path arg', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run(CLI_BIN_PATH, ['path', 'type', '---', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(path): message');
+    expect(commit).toInclude('a/path/to/file2');
+  });
+});
+
+it('--scope-root works with ambiguous first path arg with common ancestor', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await writeFile(`${root}/path/to/file3.json`, 'some-file-stuff');
+    await run(CLI_BIN_PATH, ['path', 'type', '---', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(path): message');
+    expect(commit).toInclude('a/path/to/file2');
+    expect(commit).toInclude('a/path/to/file3.json');
+  });
+});
+
+it('--scope-root errors with staged paths with no common ancestor and with no path args', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await writeFile(`${root}/file3`, 'some-file-stuff');
+    await git.add(['file1', 'file3']);
+
+    const { code, stderr } = await run(CLI_BIN_PATH, ['type', '-r', 'message'], {
+      cwd: root
+    });
+
+    expect(code).toBe(1);
+    expect(stderr).toInclude('ambiguous');
+  });
+});
+
+it('--scope-root works with staged paths with common ancestor with no path args', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await writeFile(`${root}/path/to/file3`, 'some-file-stuff');
+    await git.add(['path/to/file2', 'path/to/file3']);
+
+    await run(CLI_BIN_PATH, ['type', '---', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(path): message');
+    expect(commit).toInclude('a/path/to/file2');
+    expect(commit).toInclude('a/path/to/file3');
+  });
+});
+
+it('--scope-root works with single staged path with no path args', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await writeFile(`${root}/file3.json`, '{}');
+    await git.add(['file3.json']);
+
+    await run(CLI_BIN_PATH, ['type', '-r', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(file3): message');
+    expect(commit).toInclude('a/file3.json');
   });
 });
 
@@ -534,6 +659,79 @@ it('--scope-full derived scopes are lowercased', async () => {
   });
 });
 
+it('--scope-root derived scopes are lowercased', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run('mkdir', ['-p', 'PATH2/TO'], { cwd: root, reject: true });
+    await writeFile(`${root}/PATH2/TO/FILE3`, 'file3');
+
+    await run(CLI_BIN_PATH, ['PATH2/TO/FILE3', 'type', '-r', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(path2): message');
+    expect(commit).toInclude('a/PATH2/TO/FILE3');
+  });
+});
+
+it('exclamation-colon used when breaking change text encountered in commit message', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run(CLI_BIN_PATH, ['path', 'type', '-', 'message\n\nBREAKING: change'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type!: message');
+    expect(commit).toInclude('a/path/to/file2');
+  });
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run(
+      CLI_BIN_PATH,
+      ['path', 'type', '--', 'message\n\nBREAKING CHANGE: change'],
+      {
+        cwd: root,
+        reject: true
+      }
+    );
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(file2)!: message');
+    expect(commit).toInclude('a/path/to/file2');
+  });
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await writeFile(`${root}/path/to/file3`, 'some-file-stuff');
+    await run(
+      CLI_BIN_PATH,
+      ['path', 'type', '-r', 'message\n\nBREAKING CHANGES: change'],
+      {
+        cwd: root,
+        reject: true
+      }
+    );
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(path)!: message');
+    expect(commit).toInclude('a/path/to/file2');
+    expect(commit).toInclude('a/path/to/file3');
+  });
+});
+
 fixtures.forEach((test) => {
   const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
     '(none)'
@@ -559,7 +757,7 @@ fixtures.forEach((test) => {
 
       if (
         !test.passedPaths.length &&
-        ['scopeFull', 'scopeBasename', 'scopeAsIs'].includes(argName)
+        ['scopeFull', 'scopeRoot', 'scopeBasename', 'scopeAsIs'].includes(argName)
       ) {
         expect(code).toBe(1);
         expect(stderr).toInclude('ambiguous');
