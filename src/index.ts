@@ -1,6 +1,6 @@
 import { name as pkgName } from '../package.json';
 import { parse as parsePath, basename } from 'path';
-import projector from '@xunnamius/conventional-changelog-projector';
+import projectorConfigFactory from '@xunnamius/conventional-changelog-projector';
 import yargs from 'yargs/yargs';
 import debugFactory from 'debug';
 
@@ -26,6 +26,15 @@ export type Context = {
 };
 
 const debug = debugFactory(`${pkgName}:parse`);
+const {
+  parserOpts: { noteKeywords }
+} = projectorConfigFactory();
+// ? See: https://shorturl.at/dotG0
+const breakingRegex = RegExp(
+  '^[\\s|*]*(' + noteKeywords.join('|') + ')[:\\s]+(.*)',
+  'im'
+);
+const isBreakingChange = (message: string) => breakingRegex.test(message);
 
 /**
  * Create and return a pre-configured Yargs instance (program) and argv parser.
@@ -282,6 +291,13 @@ export function configureProgram(program?: Program): Context {
 
           message = `${commitType}(${computedScope}): ${commitMessage}`;
         }
+      }
+
+      if (isBreakingChange(commitMessage)) {
+        message =
+          message.slice(0, message.indexOf(':')) +
+          '!' +
+          message.slice(message.indexOf(':'));
       }
 
       await makeCommit(message, !finalArgv.silent, !finalArgv.verify);

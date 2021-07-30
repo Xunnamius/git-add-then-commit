@@ -198,10 +198,10 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['file', 'type', 'scope', 'message\n\nBREAKING: big change'])
+        runProgram(['file', 'type', 'scope', 'message\n\nBREAKING CHANGE: big change'])
       ).resolves.not.toBeUndefined();
       expect(mockedMakeCommit).toBeCalledWith(
-        'type(scope)!: message\n\nBREAKING: big change',
+        'type(scope)!: message\n\nBREAKING CHANGE: big change',
         true,
         false
       );
