@@ -116,13 +116,13 @@ gac path feat -- 'commit message about file2'
 `--` as used in the example above is a _scope option_, which can be used in
 place of `commit-scope`.
 
-> _To maintain scope consistency in generated changelogs with little additional
+> _To maintain scope consistency in generated changelogs with minimal
 > effort, I find myself using the [`--scope-root`][2] and [`--scope-omit`][3]
-> scope options almost exclusively these days._ — [Xunn][4]
+> scope options eight times out of ten._ — [Xunn][4]
 
 #### Basename
 
-`--` (or: `--scope-basename`) will generate a commit message using the
+`--` (or: `--scope-basename`) will generate a commit message using the lowercased
 _basename_ of 1) the first path passed to `gac` or 2) the first staged path
 returned by `git status`. The basename is always lowercased.
 
@@ -178,7 +178,7 @@ there is exactly one staged file, the deepest common ancestor of all staged
 files if there is more than one, or fail with an ambiguity error if there is no
 relative common ancestor.
 
-The path is always lowercased.
+Regardless, the final `commit-scope` is always lowercased.
 
 ##### Example
 
@@ -197,9 +197,9 @@ git commit -m 'feat(path/to/file2): commit message about file2'
 
 `---` (or: `--scope-root`) will generate a commit message with a more
 "photogenic" scope. That is, commit messages derived using this option tend to
-look nicer in [generated changelogs][5] (few in number, analogous to filesystem
-structure, consistently applied across the lifetime of the project, short and
-sweet, usually alphanumeric).
+look nicer in [generated changelogs][5]; i.e. only a small set of scopes are derived, they're analogous to filesystem
+structure, they're consistently applied across the lifetime of the project, they're short and
+sweet, and they're usually alphanumeric.
 
 Like [`--scope-full`][6], `--scope-root` will resolve the "full" or absolute
 path (relative to the repository root) of the first path passed to `gac`. Unlike
@@ -217,7 +217,7 @@ If the selected path has no first directory, i.e. it points to a file at the
 root of the project, _the filename will be used as the `commit-scope` instead_,
 sans its extension (see `package.json` in the example below).
 
-Regardless, the selected path is always lowercased.
+Regardless, the final `commit-scope` is always lowercased.
 
 ##### Example
 
