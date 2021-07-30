@@ -2,6 +2,7 @@ import { name as pkgName, version as pkgVersion } from '../package.json';
 import { tmpdir } from 'os';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
+import { GuruMeditationError } from 'named-app-errors';
 import execa from 'execa';
 import uniqueFilename from 'unique-filename';
 import debugFactory from 'debug';
@@ -19,12 +20,15 @@ const debug = debugFactory(`${pkgName}:jest-setup`);
 debug(`pkgName: "${pkgName}"`);
 debug(`pkgVersion: "${pkgVersion}"`);
 
-// TODO: XXX: add this to @ergodark/types:
+// TODO: XXX: add all that follows to @ergodark/types (renamed to @xunnamius/types):
+
 export function asMockedFunction<T extends AnyFunction = never>(): jest.MockedFunction<T>;
 export function asMockedFunction<T extends AnyFunction>(fn: T): jest.MockedFunction<T>;
 export function asMockedFunction<T extends AnyFunction>(fn?: T): jest.MockedFunction<T> {
   return (fn || jest.fn()) as unknown as jest.MockedFunction<T>;
 }
+
+// TODO: XXX (end "all that follows")
 
 // TODO: XXX: make this into a separate (mock-argv) package (along w/ the below)
 export type MockArgvOptions = {
@@ -138,7 +142,7 @@ export async function isolatedImport(path: string) {
         );
       }
 
-      return r.__esModule ? r.default : r;
+      return r.__esModule && r.default ? r.default : r;
     })(require(path));
   });
 
@@ -387,7 +391,9 @@ export function webpackTestFixture(): MockFixture {
     description: 'setting up webpack jest integration test',
     setup: async (ctx) => {
       if (typeof ctx.options.webpackVersion != 'string') {
-        throw new Error('invalid or missing options.webpackVersion, expected string');
+        throw new GuruMeditationError(
+          'invalid or missing options.webpackVersion, expected string'
+        );
       }
 
       const indexPath = Object.keys(ctx.fileContents).find((path) =>
@@ -395,10 +401,14 @@ export function webpackTestFixture(): MockFixture {
       );
 
       if (!indexPath)
-        throw new Error('could not find initial contents for src/index file');
+        throw new GuruMeditationError(
+          'could not find initial contents for src/index file'
+        );
 
       if (!ctx.fileContents['webpack.config.js'])
-        throw new Error('could not find initial contents for webpack.config.js file');
+        throw new GuruMeditationError(
+          'could not find initial contents for webpack.config.js file'
+        );
 
       await Promise.all([
         writeFile(`${ctx.root}/${indexPath}`, ctx.fileContents[indexPath]),
@@ -444,7 +454,9 @@ export function nodeImportTestFixture(): MockFixture {
       );
 
       if (!indexPath)
-        throw new Error('could not find initial contents for src/index file');
+        throw new GuruMeditationError(
+          'could not find initial contents for src/index file'
+        );
 
       await writeFile(`${ctx.root}/${indexPath}`, ctx.fileContents[indexPath]);
 
@@ -472,7 +484,9 @@ export function gitRepositoryFixture(): MockFixture {
     description: 'configuring fixture root to be a git repository',
     setup: async (ctx) => {
       if (ctx.options.setupGit && typeof ctx.options.setupGit != 'function') {
-        throw new Error('invalid or missing options.setupGit, expected function');
+        throw new GuruMeditationError(
+          'invalid or missing options.setupGit, expected function'
+        );
       }
 
       ctx.git = gitFactory({ baseDir: ctx.root });
@@ -494,7 +508,9 @@ export function dummyDirectoriesFixture(): MockFixture {
     description: 'creating dummy directories under fixture root',
     setup: async (ctx) => {
       if (!Array.isArray(ctx.options.directoryPaths)) {
-        throw new Error('invalid or missing options.directoryPaths, expected array');
+        throw new GuruMeditationError(
+          'invalid or missing options.directoryPaths, expected array'
+        );
       }
 
       await Promise.all(
