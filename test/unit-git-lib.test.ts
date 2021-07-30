@@ -91,6 +91,26 @@ describe('::makeCommit', () => {
     expect(mockedCommit).toBeCalledWith('type(scope): message');
   });
 
+  it('makes unverified commit when noVerify=true', async () => {
+    expect.hasAssertions();
+
+    mockedExeca.mockImplementationOnce(
+      () => Promise.resolve() as unknown as ReturnType<typeof mockedExeca>
+    );
+
+    await lib.makeCommit('type(scope): message', false, true);
+    expect(mockedCommit).toBeCalledWith('type(scope): message', { '--no-verify': true });
+
+    await lib.makeCommit('type(scope): message', true, true);
+    expect(mockedExeca).toBeCalledWith(
+      'git',
+      ['commit', '-m', 'type(scope): message', '--no-verify'],
+      {
+        stdio: 'inherit'
+      }
+    );
+  });
+
   it('rejects if execa-based commit operation fails', async () => {
     expect.hasAssertions();
 
