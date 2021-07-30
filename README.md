@@ -227,11 +227,11 @@ git commit -m 'feat(src): add new killer feature'
 ```
 
 ```bash
-gac test refactor --scope-full 'update tests for new killer feature'
+gac test refactor --scope-full 'update tests for new feature'
 
 git add test/fixtures/dummy-1.ts
 git add test/fixtures/dummy-2.ts
-git commit -m 'refactor(test/fixtures): update tests for new killer feature'
+git commit -m 'refactor(test/fixtures): update tests for new feature'
 ```
 
 ```bash
@@ -344,17 +344,17 @@ git commit -m 'chore(package): update dependencies'
 ```bash
 git add docs
 gac docs --- 'add sections on new killer feature'
-# or as a one-liner: gac docs docs --- 'add sections on new killer feature'
+# one-liner: gac docs docs --- 'add sections on new killer feature'
 
 git add docs
 git commit -m 'docs: add sections on new killer feature'
 ```
 
 ```bash
-gac test/integrations/index.ts test --- 'add integration tests for new killer feature'
+gac test/integrations/index.ts test --- 'update integration tests'
 
 git add test/integrations/index.ts
-git commit -m 'test(integrations): add integration tests for new killer feature'
+git commit -m 'test(integrations): update integration tests'
 ```
 
 ```bash
@@ -365,10 +365,10 @@ git commit -m 'style(test): use emojis in all TODO comments'
 ```
 
 ```bash
-gac test/index.ts test --- 'update tooling to use latest language features'
+gac test/index.ts test --- 'update tooling to use latest features'
 
 git add test/index.ts
-git commit -m 'test: update tooling to use latest language features'
+git commit -m 'test: update tooling to use latest features'
 ```
 
 ```bash
