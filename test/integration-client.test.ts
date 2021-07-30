@@ -205,7 +205,6 @@ it('errors if execution might clobber index (shallow, unambiguous)', async () =>
 });
 
 it('errors if execution might clobber index (deep, ambiguous)', async () => {
-  // TODO
   expect.hasAssertions();
 
   await withMockedFixture(async ({ root, git }) => {

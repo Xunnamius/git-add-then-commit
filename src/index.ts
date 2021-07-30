@@ -122,7 +122,7 @@ export function configureProgram(program?: Program): Context {
       );
 
       debug('saw argv: %O', argv);
-      const finalArgv = finalProgram.parse(argv);
+      const finalArgv = await finalProgram.parse(argv);
 
       let shouldDeriveScope = false;
       const opCount = ['scopeOmit', 'scopeBasename', 'scopeAsIs', 'scopeFull'].filter(
@@ -133,7 +133,6 @@ export function configureProgram(program?: Program): Context {
       if (opCount > 1)
         throw new Error('only one scope option is allowed. See --help for details');
 
-      // @ts-expect-error: // TODO: fix this
       if (finalArgv._.length < minArgCount)
         throw new Error('must pass all required arguments. See --help for details');
 
@@ -143,11 +142,9 @@ export function configureProgram(program?: Program): Context {
       const preStagedPaths = await getStagedPaths();
       debug('pre-staged paths: %O', preStagedPaths);
 
-      // @ts-expect-error: // TODO: fix this
       if (finalArgv._.length == minArgCount && !preStagedPaths.length)
         throw new Error('must stage a file or pass a path. See --help for details');
 
-      // @ts-expect-error: // TODO: fix this
       const params = Array.from(finalArgv._).map(String);
       const passedPaths = params.splice(0, params.length - (shouldDeriveScope ? 2 : 3));
       const [commitType, commitScope, commitMessage] = shouldDeriveScope
@@ -159,7 +156,6 @@ export function configureProgram(program?: Program): Context {
       debug(`initial message: ${message}`);
 
       if (preStagedPaths.length) {
-        // @ts-expect-error: // TODO: fix this
         if (!finalArgv.force) {
           debug('performing dangerous operation check');
 
@@ -193,14 +189,12 @@ export function configureProgram(program?: Program): Context {
       if (!commitScope) {
         debug('deriving commit scope based on rules: %O', finalArgv);
 
-        // @ts-expect-error: // TODO: fix this
         if (finalArgv.scopeOmit) {
           debug('deriving as omit');
           message = `${commitType}: ${commitMessage}`;
         } else {
           let computedScope: string;
 
-          // @ts-expect-error: // TODO: fix this
           if (finalArgv.scopeBasename) {
             debug('deriving as basename');
 
@@ -224,7 +218,6 @@ export function configureProgram(program?: Program): Context {
             }
 
             computedScope = computedScope.toLowerCase();
-            // @ts-expect-error: // TODO: fix this
           } else if (finalArgv.scopeFull) {
             debug('deriving as full');
 
@@ -261,7 +254,6 @@ export function configureProgram(program?: Program): Context {
         }
       }
 
-      // @ts-expect-error: // TODO: fix this
       await makeCommit(message, !finalArgv.silent);
       return finalArgv;
     }
