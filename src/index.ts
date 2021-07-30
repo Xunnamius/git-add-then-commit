@@ -95,12 +95,8 @@ export function configureProgram(program?: Program): Context {
       ['scope-omit', 'scope-basename', 'scope-as-is', 'scope-full', 'scope-root'],
       'Scope options:'
     )
-    .epilogue(
-      'Details:' +
-        '\n  The commit-scope parameter must be omitted when specifying a scope option. Specifying more than one scope option will fail. Special scope options - and -- alias -o and -b respectively.' +
-        '\n\n  If no path arguments are passed, -a will fail. If no path arguments are passed and there is not exactly one staged file, -b will fail. If no path arguments are passed, -f will return the full path if there is exactly one staged file, the deepest common ancestor of all staged files if there is more than one, or fail if there is no non-root common ancestor. If path1 is ambiguous, -f will return the deepest common ancestor.'
-    )
     .group(['help', 'version', 'silent', 'verify'], 'Other options:')
+    .epilogue('See the full documentation for more details: https://shorturl.at/iuJO7')
     .example([
       [
         '$0 path/to/file1 feat - "new feature"',
