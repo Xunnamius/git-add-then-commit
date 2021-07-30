@@ -137,21 +137,15 @@ If more than one file is staged and no paths are passed to `gac`, using
 
 Given the following filesystem structure:
 
-```
-.
-└── src
-    └── index.ts <MODIFIED>
-```
+    .
+    └── src
+        └── index.ts <MODIFIED>
 
-The following `gac` command:
+The following are equivalent:
 
 ```bash
 gac src feat - 'add new killer feature'
-```
 
-Is equivalent to:
-
-```bash
 git add src/index.ts
 git commit -m 'feat: add new killer feature'
 ```
@@ -159,8 +153,7 @@ git commit -m 'feat: add new killer feature'
 #### As-is
 
 `-a` (or: `--scope-as-is`) will generate a commit message using the first path
-passed to `gac` _exactly as typed_. This is useful when working with a
-case-insensitive filesystem.
+passed to `gac` [_exactly as typed_][12].
 
 If no paths are passed to `gac`, using `--scope-as-is` will cause an ambiguity
 error.
@@ -169,28 +162,22 @@ error.
 
 Given the following filesystem structure:
 
-```
-.
-└── src
-    ├── index.ts <MODIFIED>
-    ├── cli.ts <MODIFIED>
-    ├── errors.ts <MODIFIED>
-    └── git.ts <MODIFIED>
-```
+    .
+    └── src
+        ├── index.ts <MODIFIED>
+        ├── cli.ts <MODIFIED>
+        ├── errors.ts <MODIFIED>
+        └── git.ts <MODIFIED>
 
-The following (needlessly complex) `gac` command:
+The following are equivalent:
 
 ```bash
 gac src/index.ts src feat --scope-as-is 'add new killer feature'
-```
 
-Is equivalent to:
-
-```bash
 git add src/index.ts
-git add cli.ts
-git add errors.ts
-git add git.ts
+git add src/cli.ts
+git add src/errors.ts
+git add src/git.ts
 git commit -m 'feat(src/index.ts): add new killer feature'
 ```
 
@@ -212,45 +199,45 @@ Regardless, the final `commit-scope` is always lowercased.
 
 Given the following filesystem structure:
 
-```
-.
-├── public
-│   └── images
-│       ├── favicon.ico <MODIFIED>
-│       ├── hero.png
-│       └── villain.png
-├── src
-│   ├── index.ts <MODIFIED>
-│   └── interface
-│       ├── cli.ts <MODIFIED>
-│       └── git.ts
-└── test
-    ├── units.ts
-    └── fixtures
-        ├── dummy-1.ts <MODIFIED>
-        └── dummy-2.ts <MODIFIED>
-```
+    .
+    ├── public
+    │   └── images
+    │       ├── favicon.ico <MODIFIED>
+    │       ├── hero.png
+    │       └── villain.png
+    ├── src
+    │   ├── index.ts <MODIFIED>
+    │   └── interface
+    │       ├── cli.ts <MODIFIED>
+    │       └── git.ts
+    └── test
+        ├── units.ts
+        └── fixtures
+            ├── dummy-1.ts <MODIFIED>
+            └── dummy-2.ts <MODIFIED>
 
-The following `gac` commands:
+The following are equivalent:
 
 ```bash
 gac src feat --scope-full 'add new killer feature'
-gac test refactor --scope-full 'update tests for new killer feature'
-gac public style --scope-full 'new favicon'
-```
 
-Are equivalent to:
-
-```bash
 git add src/index.ts
 git add src/interface/cli.ts
 git commit -m 'feat(src): add new killer feature'
+```
+
+```bash
+gac test refactor --scope-full 'update tests for new killer feature'
 
 git add test/fixtures/dummy-1.ts
 git add test/fixtures/dummy-2.ts
 git commit -m 'refactor(test/fixtures): update tests for new killer feature'
+```
 
-git add public/images/favicon.ico
+```bash
+gac public style --scope-full 'new favicon'
+
+git add public
 git commit -m 'style(public/images/favicon.ico): new favicon'
 ```
 
@@ -297,89 +284,110 @@ On the other hand, if the selected path has a first directory matching
   derive the `commit-scope` _only if the file is not named "index"_.
 
 - If there is no second directory and the file _is_ named "index" (sans
-  extension), `commit-scope` is [omitted](#omit).
+  extension), `commit-scope` is [omitted][3].
 
 At the end of the process, if `commit-scope` matches `commit-type`,
-`commit-scope` is [omitted](#omit). Otherwise, `commit-scope` is always
-lowercased.
+`commit-scope` is [omitted][3]. Otherwise, `commit-scope` is always lowercased.
 
 ##### Example
 
 Given the following filesystem structure:
 
-```
-.
-├── CHANGELOG.md <MODIFIED>
-├── CONTRIBUTING.md
-├── docs
-│   ├── supplementary.md <MODIFIED>
-│   └── README.md <MODIFIED>
-├── index.ts <MODIFIED>
-├── lib
-│   ├── api
-│       └── adapter.ts <MODIFIED>
-│   ├── index.ts <MODIFIED>
-│   ├── cli.ts <MODIFIED>
-│   └── git.ts
-├── package.json <MODIFIED>
-├── package-lock.json <MODIFIED>
-├── README.md
-└── test
+    .
+    ├── CHANGELOG.md <MODIFIED>
+    ├── CONTRIBUTING.md
+    ├── docs
+    │   ├── supplementary.md <MODIFIED>
+    │   └── README.md <MODIFIED>
     ├── index.ts <MODIFIED>
-    ├── integrations
-    │   ├── browser-tests.ts
-    │   ├── e2e-tests.ts <MODIFIED>
-    │   └── index.ts <MODIFIED>
-    └── units.ts <MODIFIED>
-```
+    ├── lib
+    │   ├── api
+    │       └── adapter.ts <MODIFIED>
+    │   ├── index.ts <MODIFIED>
+    │   ├── cli.ts <MODIFIED>
+    │   └── git.ts
+    ├── package.json <MODIFIED>
+    ├── package-lock.json <MODIFIED>
+    ├── README.md
+    └── test
+        ├── index.ts <MODIFIED>
+        ├── integrations
+        │   ├── browser-tests.ts
+        │   ├── e2e-tests.ts <MODIFIED>
+        │   └── index.ts <MODIFIED>
+        └── units.ts <MODIFIED>
 
-The following `gac` commands:
+The following are equivalent:
 
 ```bash
 gac lib/index.ts fix --- 'fix bug that caused crash'
-gac lib/api refactor --- 'use updated mongodb native driver'
-gac package.json package-lock.json chore --- 'update dependencies'
-git add docs
-gac docs --- 'add sections on new killer feature'
-gac test/integrations/index.ts test --- 'add integration tests for new killer feature'
-gac test/integrations style --- 'use emojis in all TODO comments'
-gac test/index.ts test --- 'update tooling to use latest language features'
-gac test test --- 'add unit tests for new killer feature'
-gac index.ts lib/cli.ts feat --- 'add new killer feature'
-gac CHANGELOG.md docs --- 'regenerate'
-```
 
-Are equivalent to:
-
-```bash
 git add lib/index.ts
 git commit -m 'fix(lib): fix bug that caused crash'
+```
+
+```bash
+gac lib/api refactor --- 'use updated mongodb native driver'
 
 git add lib/api/adapter.ts
 git commit -m 'refactor(lib): use updated mongodb native driver'
+```
+
+```bash
+gac package.json package-lock.json chore --- 'update dependencies'
 
 git add package.json
 git add package-lock.json
 git commit -m 'chore(package): update dependencies'
+```
+
+```bash
+git add docs
+gac docs --- 'add sections on new killer feature'
+# or as a one-liner: gac docs docs --- 'add sections on new killer feature'
 
 git add docs
 git commit -m 'docs: add sections on new killer feature'
+```
+
+```bash
+gac test/integrations/index.ts test --- 'add integration tests for new killer feature'
 
 git add test/integrations/index.ts
 git commit -m 'test(integrations): add integration tests for new killer feature'
+```
+
+```bash
+gac test/integrations style --- 'use emojis in all TODO comments'
 
 git add test/integrations/e2e-tests.ts
 git commit -m 'style(test): use emojis in all TODO comments'
+```
+
+```bash
+gac test/index.ts test --- 'update tooling to use latest language features'
 
 git add test/index.ts
 git commit -m 'test: update tooling to use latest language features'
+```
+
+```bash
+gac test test --- 'add unit tests for new killer feature'
 
 git add test/units.ts
 git commit -m 'test(units): add unit tests for new killer feature'
+```
+
+```bash
+gac index.ts lib/cli.ts feat --- 'add new killer feature'
 
 git add index.ts
 git add lib/cli.ts
 git commit -m 'feat(index): add new killer feature'
+```
+
+```bash
+gac CHANGELOG.md docs --- 'regenerate'
 
 git add CHANGELOG.md
 git commit -m 'docs(changelog): regenerate'
@@ -391,11 +399,10 @@ git commit -m 'docs(changelog): regenerate'
 - Use `gac ... --no-verify` to perform an [unverified commit][8].
 - If `commit-message` describes a [breaking change][9], [an exclamation point is
   prepended to the colon][11] in the final commit message.
-- `gac` works with both currently staged files in addition to any passed path
-  arguments. This makes it easy to, for instance, stage files with
-  [vscode](https://code.visualstudio.com/docs/editor/versioncontrol#_commit) or
-  [`git add -p`](https://git-scm.com/book/en/v2/Git-Tools-Interactive-Staging#_staging_patches)
-  then use `gac` to quickly compose an [atomic][7] [conventional commit][10].
+- `gac` works with both currently staged files and any paths passed as arguments
+  with the latter having precedence. This makes it easy to, for instance, stage
+  files with [vscode][13] or [`git add -p`][14] then use `gac` to quickly
+  compose an [atomic][7] [conventional commit][10].
 
 ### Importing as a Module
 
@@ -504,3 +511,7 @@ information.
   https://github.com/Xunnamius/conventional-changelog-projector/blob/bde3ed43fd30aae4657c5b27f9e14a20115a903d/defaults.js#L124
 [11]:
   https://www.conventionalcommits.org/en/v1.0.0/#commit-message-with--to-draw-attention-to-breaking-change
+[12]: https://en.wikipedia.org/wiki/WYSIWYG
+[13]: https://code.visualstudio.com/docs/editor/versioncontrol#_commit
+[14]:
+  https://git-scm.com/book/en/v2/Git-Tools-Interactive-Staging#_staging_patches
