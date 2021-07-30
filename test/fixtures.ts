@@ -3,10 +3,10 @@ export type PathActual = string[] & { actual: string[] };
 
 // ? The paths as they might appear in the command `git add paths`
 const Paths = {
-  single: ['file1'] as PathActual,
+  single: ['file1.json'] as PathActual,
   short: ['path'] as PathActual,
-  full: ['path/to/file2'] as PathActual,
-  double: ['path', 'file1'] as PathActual,
+  full: ['path/to/file2.json'] as PathActual,
+  double: ['path', 'file1.json'] as PathActual,
   empty: [] as unknown as PathActual
 };
 
@@ -14,7 +14,7 @@ const Paths = {
 Paths.single.actual = Paths.single;
 Paths.short.actual = Paths.full;
 Paths.full.actual = Paths.full;
-Paths.double.actual = ['path/to/file2', 'file1'];
+Paths.double.actual = ['path/to/file2.json', 'file1.json'];
 Paths.empty.actual = Paths.empty;
 
 // ? An object of options corresponding to specific CLI arguments
@@ -36,35 +36,45 @@ const OptionsMeta: { [key: string]: { scope: Path; args: Record<string, unknown>
   },
   scopeAsIs: {
     scope: {
-      single: 'file1',
+      single: 'file1.json',
       short: 'path',
-      full: 'path/to/file2',
+      full: 'path/to/file2.json',
       double: 'path',
-      empty: 'path/to/file2'
+      empty: 'path/to/file2.json'
     },
     args: { scopeAsIs: true }
   },
   scopeBasename: {
     scope: {
-      single: 'file1',
-      short: 'file2',
-      full: 'file2',
-      double: 'file2',
-      empty: 'file2'
+      single: 'file1.json',
+      short: 'file2.json',
+      full: 'file2.json',
+      double: 'file2.json',
+      empty: 'file2.json'
     },
     args: { scopeBasename: true }
   },
   scopeFull: {
     scope: {
-      single: 'file1',
-      short: 'path/to/file2',
-      full: 'path/to/file2',
-      double: 'path/to/file2',
-      empty: 'path/to/file2'
+      single: 'file1.json',
+      short: 'path/to/file2.json',
+      full: 'path/to/file2.json',
+      double: 'path/to/file2.json',
+      empty: 'path/to/file2.json'
     },
     args: { scopeFull: true }
   },
-  testScope: {
+  scopeRoot: {
+    scope: {
+      single: 'file1',
+      short: 'path',
+      full: 'path',
+      double: 'path',
+      empty: 'path'
+    },
+    args: { scopeRoot: true }
+  },
+  dummyScope: {
     scope: {
       single: 'scope',
       short: 'scope',
@@ -90,17 +100,20 @@ addPathsKeys.forEach((k) => preStagePathsNames.set(Paths[k].actual, k));
 
 const tests = (
   [
-    ['scope', OptionsMeta.testScope],
+    ['scope', OptionsMeta.dummyScope],
     ['-', OptionsMeta.scopeOmit],
     ['--', OptionsMeta.scopeBasename],
+    ['---', OptionsMeta.scopeRoot],
     ['-o', OptionsMeta.scopeOmit],
     ['-a', OptionsMeta.scopeAsIs],
     ['-b', OptionsMeta.scopeBasename],
     ['-f', OptionsMeta.scopeFull],
+    ['-r', OptionsMeta.scopeRoot],
     ['--scope-omit', OptionsMeta.scopeOmit],
     ['--scope-as-is', OptionsMeta.scopeAsIs],
     ['--scope-basename', OptionsMeta.scopeBasename],
-    ['--scope-full', OptionsMeta.scopeFull]
+    ['--scope-full', OptionsMeta.scopeFull],
+    ['--scope-root', OptionsMeta.scopeRoot]
   ] as [string, typeof OptionsMeta.value][]
 )
   .flatMap(([scopeArg, optionsMeta]) =>
@@ -143,19 +156,19 @@ export type Fixtures = typeof tests & {
 const fixtures = [
   ...tests,
   ...[
-    ['--scope-full', 'path', 'file1', 'type', 'the message'],
-    ['path', '--scope-full', 'file1', 'type', 'the message'],
-    ['path', 'file1', '--scope-full', 'type', 'the message'],
-    ['path', 'file1', 'type', '--scope-full', 'the message'],
-    ['path', 'file1', 'type', 'the message', '--scope-full']
+    ['--scope-full', 'path', 'file1.json', 'type', 'the message'],
+    ['path', '--scope-full', 'file1.json', 'type', 'the message'],
+    ['path', 'file1.json', '--scope-full', 'type', 'the message'],
+    ['path', 'file1.json', 'type', '--scope-full', 'the message'],
+    ['path', 'file1.json', 'type', 'the message', '--scope-full']
   ].map((programArgs) => ({
     preStagedPaths: [],
-    stagePaths: ['path/to/file2', 'file1'],
-    passedPaths: ['path', 'file1'],
+    stagePaths: ['path/to/file2.json', 'file1.json'],
+    passedPaths: ['path', 'file1.json'],
     programArgs,
     commitArgs: { scopeFull: true },
-    commitMessage: 'type(path/to/file2): the message',
-    titleSuffix: 'preset=custom,post_test=true'
+    commitMessage: 'type(path/to/file2.json): the message',
+    titleSuffix: 'preset=order-does-not-matter'
   }))
 ] as unknown as Fixtures;
 
