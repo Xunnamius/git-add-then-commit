@@ -10,7 +10,11 @@ const debug = require('debug')(`${require('./package.json').name}:babel-config`)
 const transformRenameImport = [
   'transform-rename-import',
   {
-    replacements: [{ original: '../package.json', replacement: '../../package.json' }]
+    replacements: [
+      { original: '../package.json', replacement: '../../package.json' },
+      // ? see: https://shorturl.at/bkszM
+      { original: '../package.json.mjs', replacement: '../../package.json' }
+    ]
   }
 ];
 
