@@ -25,9 +25,6 @@ A minimalist CLI tool to automate the ↯ `git add X` ↯ `git commit -m 'Y(Z): 
 
 ## Install
 
-> Note: NPM versions >=7 may need `npm install --legacy-peer-deps` until
-> [upstream peer dependency problems are resolved][npm-v7-bc].
-
 ```shell
 npm install --global git-add-then-commit
 ```
@@ -70,6 +67,8 @@ exhibit the [dual package hazard][hazard].
 
 ## Usage
 
+    gac [path1, path2, ...] commit-type commit-scope commit-message
+
 > You can use `--help` to get help text output, `--version` to get the current
 > version, and `--silent` to prevent all output.
 
@@ -85,7 +84,7 @@ Where the commit message has:
 
 - Type: **feat**
 - Scope: **file2**
-- Description: **commit message about file2**
+- Subject (or message): **commit message about file2**
 
 With `git-add-then-commit` (`gac`), this can be simplified to:
 
@@ -112,15 +111,29 @@ And further still:
 gac path feat -- 'commit message about file2'
 ```
 
-`--` (an alias of `--scope-basename`) is a **scope option** that causes `gac` to
-use the _basename_ of 1) the first path passed to `gac` or 2) the first staged
-path returned by `git status`. The basename is always lowercased.
+### Scope Options
+
+`--` as used in the example above is a _scope option_, which can be used in
+place of `commit-scope`.
+
+> _To maintain scope consistency in generated changelogs with little additional
+> effort, I find myself using the [`--scope-root`][2] and [`--scope-omit`][3]
+> scope options almost exclusively these days._ — [Xunn][4]
+
+#### Basename
+
+`--` (or: `--scope-basename`) will generate a commit message using the
+_basename_ of 1) the first path passed to `gac` or 2) the first staged path
+returned by `git status`. The basename is always lowercased.
 
 If more than one file is staged and no paths are passed to `gac`, using
 `--scope-basename` will cause an ambiguity error.
 
-You can also use `-` (or: `--scope-omit`) to generate a commit message without a
-scope:
+#### Omit
+
+`-` (or: `--scope-omit`) will generate a commit message with no scope.
+
+##### Example
 
 ```shell
 gac path feat - 'commit message about file2'
@@ -133,8 +146,12 @@ git add path/to/file2
 git commit -m 'feat: commit message about file2'
 ```
 
-Further, `--scope-as-is` will use the first path passed to `gac` as the scope
-_exactly as typed_:
+#### As-is
+
+`-a` (or: `--scope-as-is`) will generate a commit message using the first path
+passed to `gac` _exactly as it was typed_.
+
+##### Example
 
 ```shell
 gac path feat --scope-as-is 'commit message about file2'
@@ -150,8 +167,13 @@ git commit -m 'feat(path): commit message about file2'
 If no paths are passed to `gac`, using `--scope-as-is` will cause an ambiguity
 error.
 
-Finally, `--scope-full` will resolve the "full" or absolute path (relative to
-the repository root) of the first path passed to `gac`:
+#### Full
+
+`-f` (or: `--scope-full`) will generate a commit message using the "full" or
+absolute path (relative to the repository root) of the first path passed to
+`gac`. The path is always lowercased.
+
+##### Example
 
 ```shell
 gac path feat --scope-full 'commit message about file2'
@@ -167,14 +189,64 @@ git commit -m 'feat(path/to/file2): commit message about file2'
 If no path arguments are passed, `--scope-full` will return the full path if
 there is exactly one staged file, the deepest common ancestor of all staged
 files if there is more than one, or fail with an ambiguity error if there is no
-non-root common ancestor. The path is always lowercased.
+relative common ancestor.
 
-#### Other Details
+#### Root
 
-- Use `gac --help` for more usage information, including other aliases
-- The scope string argument must be omitted when specifying a scope option
-- Specifying more than one scope option will cause an error
-- Executing `gac` with no paths staged and no path arguments will cause an error
+`---` (or: `--scope-root`) will generate a commit message with a more
+"photogenic" scope. That is, commit messages derived using this option tend to
+look nicer in [generated changelogs][5] (few in number, analogous to filesystem
+structure, consistently applied across the lifetime of the project, short and
+sweet, usually alphanumeric).
+
+Like [`--scope-full`][6], `--scope-root` will resolve the "full" or absolute
+path (relative to the repository root) of the first path passed to `gac`. Unlike
+[`--scope-full`][6], only the name of the _first directory_ in the full
+path—rather than the full path itself—will be used as the `commit-scope`.
+
+If no path arguments are passed, `--scope-root` will return the first directory
+in the full path if there is exactly one staged file. If there is more than one
+staged file and their full paths share the same first directory (or "root"),
+said directory is used. Otherwise, if there is no common first directory, the
+operation fails with an ambiguity error. This is usually a hint to construct [a
+more fine-grain commit][7], or to use [`--scope-omit`][3].
+
+If the selected path has no first directory, i.e. it points to a file at the
+root of the project, _the filename will be used as the `commit-scope` instead_,
+sans its extension (see `package.json` in the example below).
+
+Regardless, the selected path is always lowercased.
+
+##### Example
+
+```shell
+gac path feat --- 'commit message about changes'
+gac package.json package-lock.json chore --- 'update dependencies'
+```
+
+Which is equivalent to:
+
+```shell
+git add path/to/file2
+git add path/file3
+git add path/to/file4
+git commit -m 'feat(path): commit message about changes'
+
+git add package.json
+git add package-lock.json
+git commit -m 'chore(package): update dependencies'
+```
+
+### Tips
+
+- Use `gac --help` for more usage information, including listing all aliases.
+- Use `gac ... --no-verify` to perform an [unverified commit][8].
+- Executing `gac` with no paths staged and no path arguments will cause an
+  error.
+- Specifying more than one scope option will cause an error.
+- The scope string argument must be omitted when specifying a scope option.
+- If `commit-message` describes a [breaking change][9], [an exclamation point
+  will be prepended to the colon][11] in the final commit message.
 
 ### Importing as a Module
 
@@ -271,3 +343,15 @@ information.
   https://github.blog/2020-10-13-presenting-v7-0-0-of-the-npm-cli/#user-content-breaking-changes
 [10]: https://conventionalcommits.org
 [1]: https://github.com/yargs/yargs
+[2]: #root
+[3]: #omit
+[4]: https://github.com/Xunnamius
+[5]: https://github.com/conventional-changelog/conventional-changelog
+[6]: #full
+[7]: https://dev.to/cbillowes/why-i-create-atomic-commits-in-git-kfi
+[8]:
+  https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-verify
+[9]:
+  https://github.com/Xunnamius/conventional-changelog-projector/blob/bde3ed43fd30aae4657c5b27f9e14a20115a903d/defaults.js#L124
+[11]:
+  https://www.conventionalcommits.org/en/v1.0.0/#commit-message-with--to-draw-attention-to-breaking-change
