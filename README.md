@@ -171,7 +171,14 @@ error.
 
 `-f` (or: `--scope-full`) will generate a commit message using the "full" or
 absolute path (relative to the repository root) of the first path passed to
-`gac`. The path is always lowercased.
+`gac`.
+
+If no path arguments are passed, `--scope-full` will return the full path if
+there is exactly one staged file, the deepest common ancestor of all staged
+files if there is more than one, or fail with an ambiguity error if there is no
+relative common ancestor.
+
+The path is always lowercased.
 
 ##### Example
 
@@ -185,11 +192,6 @@ Which is equivalent to:
 git add path/to/file2
 git commit -m 'feat(path/to/file2): commit message about file2'
 ```
-
-If no path arguments are passed, `--scope-full` will return the full path if
-there is exactly one staged file, the deepest common ancestor of all staged
-files if there is more than one, or fail with an ambiguity error if there is no
-relative common ancestor.
 
 #### Root
 
