@@ -88,7 +88,7 @@ describe('::makeCommit', () => {
   it('makes simple-git-based commit when called with pipeOutput=false', async () => {
     expect.hasAssertions();
     await lib.makeCommit('type(scope): message', false);
-    expect(mockedCommit).toBeCalledWith('type(scope): message');
+    expect(mockedCommit).toBeCalledWith('type(scope): message', []);
   });
 
   it('makes unverified commit when noVerify=true', async () => {
@@ -99,7 +99,7 @@ describe('::makeCommit', () => {
     );
 
     await lib.makeCommit('type(scope): message', false, true);
-    expect(mockedCommit).toBeCalledWith('type(scope): message', { '--no-verify': true });
+    expect(mockedCommit).toBeCalledWith('type(scope): message', ['--no-verify']);
 
     await lib.makeCommit('type(scope): message', true, true);
     expect(mockedExeca).toBeCalledWith(
@@ -138,7 +138,7 @@ describe('::makeCommit', () => {
     });
 
     mockCommitResult.commit = oldCommit;
-    expect(mockedCommit).toBeCalledWith('type(scope): message');
+    expect(mockedCommit).toBeCalledWith('type(scope): message', []);
   });
 });
 
