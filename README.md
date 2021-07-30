@@ -21,11 +21,12 @@
 # git-add-then-commit
 
 A minimalist CLI tool to automate the ↯ `git add X` ↯ `git commit -m 'Y(Z): W'`
-↯ workflow, helping you compose [conventional commits][10] quickly and easily.
+↯ workflow and help you compose [atomic][7] [consistent][2] [conventional
+commits][10] quickly and easily.
 
 ## Install
 
-```shell
+```bash
 npm install --global git-add-then-commit
 ```
 
@@ -72,43 +73,43 @@ exhibit the [dual package hazard][hazard].
 > You can use `--help` to get help text output, `--version` to get the current
 > version, and `--silent` to prevent all output.
 
-For a project using [conventional commits][10], your commit flow might go
+For a repository using [conventional commits][10], your commit flow might go
 something like this:
 
-```shell
+```bash
 git add path/to/file2
-git commit -m 'feat(file2): commit message about file2'
+git commit -m 'feat(file2): add new killer feature'
 ```
 
 Where the commit message has:
 
 - Type: **feat**
 - Scope: **file2**
-- Subject (or message): **commit message about file2**
+- Subject (or message): **add new killer feature**
 
 With `git-add-then-commit` (`gac`), this can be simplified to:
 
-```shell
+```bash
 git add path/to/file2
-gac feat file2 'commit message about file2'
+gac feat file2 'add new killer feature'
 ```
 
 And further simplified to:
 
-```shell
-gac path/to/file2 feat file2 'commit message about file2'
+```bash
+gac path/to/file2 feat file2 'add new killer feature'
 ```
 
 And even further (using a scope option):
 
-```shell
-gac path/to/file2 feat -- 'commit message about file2'
+```bash
+gac path/to/file2 feat -- 'add new killer feature'
 ```
 
 And further still:
 
-```shell
-gac path feat -- 'commit message about file2'
+```bash
+gac path feat -- 'add new killer feature'
 ```
 
 ### Scope Options
@@ -116,15 +117,14 @@ gac path feat -- 'commit message about file2'
 `--` as used in the example above is a _scope option_, which can be used in
 place of `commit-scope`.
 
-> _To maintain scope consistency in generated changelogs with minimal
-> effort, I find myself using the [`--scope-root`][2] and [`--scope-omit`][3]
-> scope options eight times out of ten._ — [Xunn][4]
+> To maintain scope consistency in generated changelogs with minimal effort,
+> favor the [`--scope-root`][2] and [`--scope-omit`][3] scope options.
 
 #### Basename
 
-`--` (or: `--scope-basename`) will generate a commit message using the lowercased
-_basename_ of 1) the first path passed to `gac` or 2) the first staged path
-returned by `git status`. The basename is always lowercased.
+`--` (or: `--scope-basename`) will generate a commit message using the
+lowercased _basename_ of 1) the first path passed to `gac` or 2) the first
+staged path returned by `git status`. The basename is always lowercased.
 
 If more than one file is staged and no paths are passed to `gac`, using
 `--scope-basename` will cause an ambiguity error.
@@ -135,37 +135,64 @@ If more than one file is staged and no paths are passed to `gac`, using
 
 ##### Example
 
-```shell
-gac path feat - 'commit message about file2'
+Given the following filesystem structure:
+
+```
+.
+└── src
+    └── index.ts <MODIFIED>
 ```
 
-Which is equivalent to:
+The following `gac` command:
 
-```shell
-git add path/to/file2
-git commit -m 'feat: commit message about file2'
+```bash
+gac src feat - 'add new killer feature'
+```
+
+Is equivalent to:
+
+```bash
+git add src/index.ts
+git commit -m 'feat: add new killer feature'
 ```
 
 #### As-is
 
 `-a` (or: `--scope-as-is`) will generate a commit message using the first path
-passed to `gac` _exactly as it was typed_.
-
-##### Example
-
-```shell
-gac path feat --scope-as-is 'commit message about file2'
-```
-
-Which is equivalent to:
-
-```shell
-git add path/to/file2
-git commit -m 'feat(path): commit message about file2'
-```
+passed to `gac` _exactly as typed_. This is useful when working with a
+case-insensitive filesystem.
 
 If no paths are passed to `gac`, using `--scope-as-is` will cause an ambiguity
 error.
+
+##### Example
+
+Given the following filesystem structure:
+
+```
+.
+└── src
+    ├── index.ts <MODIFIED>
+    ├── cli.ts <MODIFIED>
+    ├── errors.ts <MODIFIED>
+    └── git.ts <MODIFIED>
+```
+
+The following (needlessly complex) `gac` command:
+
+```bash
+gac src/index.ts src feat --scope-as-is 'add new killer feature'
+```
+
+Is equivalent to:
+
+```bash
+git add src/index.ts
+git add cli.ts
+git add errors.ts
+git add git.ts
+git commit -m 'feat(src/index.ts): add new killer feature'
+```
 
 #### Full
 
@@ -173,82 +200,202 @@ error.
 absolute path (relative to the repository root) of the first path passed to
 `gac`.
 
-If no path arguments are passed, `--scope-full` will return the full path if
-there is exactly one staged file, the deepest common ancestor of all staged
-files if there is more than one, or fail with an ambiguity error if there is no
-relative common ancestor.
+If no path arguments are passed, `--scope-full` will use the full path—including
+filename and extension—if there is exactly one path or staged file, the deepest
+common ancestor of all paths/files if there is more than one (or the first path
+is ambiguous), or fail with an ambiguity error if there is no relative common
+ancestor.
 
 Regardless, the final `commit-scope` is always lowercased.
 
 ##### Example
 
-```shell
-gac path feat --scope-full 'commit message about file2'
+Given the following filesystem structure:
+
+```
+.
+├── public
+│   └── images
+│       ├── favicon.ico <MODIFIED>
+│       ├── hero.png
+│       └── villain.png
+├── src
+│   ├── index.ts <MODIFIED>
+│   └── interface
+│       ├── cli.ts <MODIFIED>
+│       └── git.ts
+└── test
+    ├── units.ts
+    └── fixtures
+        ├── dummy-1.ts <MODIFIED>
+        └── dummy-2.ts <MODIFIED>
 ```
 
-Which is equivalent to:
+The following `gac` commands:
 
-```shell
-git add path/to/file2
-git commit -m 'feat(path/to/file2): commit message about file2'
+```bash
+gac src feat --scope-full 'add new killer feature'
+gac test refactor --scope-full 'update tests for new killer feature'
+gac public style --scope-full 'new favicon'
+```
+
+Are equivalent to:
+
+```bash
+git add src/index.ts
+git add src/interface/cli.ts
+git commit -m 'feat(src): add new killer feature'
+
+git add test/fixtures/dummy-1.ts
+git add test/fixtures/dummy-2.ts
+git commit -m 'refactor(test/fixtures): update tests for new killer feature'
+
+git add public/images/favicon.ico
+git commit -m 'style(public/images/favicon.ico): new favicon'
 ```
 
 #### Root
 
 `---` (or: `--scope-root`) will generate a commit message with a more
 "photogenic" scope. That is, commit messages derived using this option tend to
-look nicer in [generated changelogs][5]; i.e. only a small set of scopes are derived, they're analogous to filesystem
-structure, they're consistently applied across the lifetime of the project, they're short and
-sweet, and they're usually alphanumeric.
+look nicer in [generated changelogs][5]. Specifically:
 
-Like [`--scope-full`][6], `--scope-root` will resolve the "full" or absolute
-path (relative to the repository root) of the first path passed to `gac`. Unlike
-[`--scope-full`][6], only the name of the _first directory_ in the full
-path—rather than the full path itself—will be used as the `commit-scope`.
+- A small, consistently derived set of scopes are used across the lifetime of
+  the repository.
+- Derived scopes are analogous to filesystem structure.
+- Derived scopes tend to be short, sweet, and alphanumeric.
 
-If no path arguments are passed, `--scope-root` will return the first directory
-in the full path if there is exactly one staged file. If there is more than one
-staged file and their full paths share the same first directory (or "root"),
-said directory is used. Otherwise, if there is no common first directory, the
-operation fails with an ambiguity error. This is usually a hint to construct [a
-more fine-grain commit][7], or to use [`--scope-omit`][3].
+Like [`--scope-full`][6], `--scope-root` will derive `commit-scope` by selecting
+from any path arguments and staged file paths available. Unlike
+[`--scope-full`][6], only the _first directory_ (left-to-right) in the selected
+path—rather than the deepest common ancestor—is used to derive `commit-scope`.
+
+> For example, `path` in `path/to/some/file` is the first directory.
+
+If no path arguments are passed and there is exactly one staged file,
+`--scope-root` will select the first directory from that file's path. If there
+is more than one staged file (or the first path is ambiguous) and their paths
+share the same first directory, said directory is selected; if there is no
+common first directory, the operation fails with an ambiguity error.
+
+> An ambiguity error using `--scope-root` is usually a hint to construct [a more
+> fine-grain commit][7].
 
 If the selected path has no first directory, i.e. it points to a file at the
-root of the project, _the filename will be used as the `commit-scope` instead_,
-sans its extension (see `package.json` in the example below).
+root of the repository, the filename is used as `commit-scope` instead with its
+file extension removed (see `package.json` in the examples below).
 
-Regardless, the final `commit-scope` is always lowercased.
+On the other hand, if the selected path has a first directory matching
+`commit-type` (see `test` in the examples below):
+
+- If there is a _second directory_ in the selected path, the second directory is
+  used to derive the `commit-scope` instead.
+
+> For example, `to` in `path/to/some/file` is the second directory.
+
+- If there is no second directory, the filename (sans extension) is used to
+  derive the `commit-scope` _only if the file is not named "index"_.
+
+- If there is no second directory and the file _is_ named "index" (sans
+  extension), `commit-scope` is [omitted](#omit).
+
+At the end of the process, if `commit-scope` matches `commit-type`,
+`commit-scope` is [omitted](#omit). Otherwise, `commit-scope` is always
+lowercased.
 
 ##### Example
 
-```shell
-gac path feat --- 'commit message about changes'
-gac package.json package-lock.json chore --- 'update dependencies'
+Given the following filesystem structure:
+
+```
+.
+├── CHANGELOG.md <MODIFIED>
+├── CONTRIBUTING.md
+├── docs
+│   ├── supplementary.md <MODIFIED>
+│   └── README.md <MODIFIED>
+├── index.ts <MODIFIED>
+├── lib
+│   ├── api
+│       └── adapter.ts <MODIFIED>
+│   ├── index.ts <MODIFIED>
+│   ├── cli.ts <MODIFIED>
+│   └── git.ts
+├── package.json <MODIFIED>
+├── package-lock.json <MODIFIED>
+├── README.md
+└── test
+    ├── index.ts <MODIFIED>
+    ├── integrations
+    │   ├── browser-tests.ts
+    │   ├── e2e-tests.ts <MODIFIED>
+    │   └── index.ts <MODIFIED>
+    └── units.ts <MODIFIED>
 ```
 
-Which is equivalent to:
+The following `gac` commands:
 
-```shell
-git add path/to/file2
-git add path/file3
-git add path/to/file4
-git commit -m 'feat(path): commit message about changes'
+```bash
+gac lib/index.ts fix --- 'fix bug that caused crash'
+gac lib/api refactor --- 'use updated mongodb native driver'
+gac package.json package-lock.json chore --- 'update dependencies'
+git add docs
+gac docs --- 'add sections on new killer feature'
+gac test/integrations/index.ts test --- 'add integration tests for new killer feature'
+gac test/integrations style --- 'use emojis in all TODO comments'
+gac test/index.ts test --- 'update tooling to use latest language features'
+gac test test --- 'add unit tests for new killer feature'
+gac index.ts lib/cli.ts feat --- 'add new killer feature'
+gac CHANGELOG.md docs --- 'regenerate'
+```
+
+Are equivalent to:
+
+```bash
+git add lib/index.ts
+git commit -m 'fix(lib): fix bug that caused crash'
+
+git add lib/api/adapter.ts
+git commit -m 'refactor(lib): use updated mongodb native driver'
 
 git add package.json
 git add package-lock.json
 git commit -m 'chore(package): update dependencies'
+
+git add docs
+git commit -m 'docs: add sections on new killer feature'
+
+git add test/integrations/index.ts
+git commit -m 'test(integrations): add integration tests for new killer feature'
+
+git add test/integrations/e2e-tests.ts
+git commit -m 'style(test): use emojis in all TODO comments'
+
+git add test/index.ts
+git commit -m 'test: update tooling to use latest language features'
+
+git add test/units.ts
+git commit -m 'test(units): add unit tests for new killer feature'
+
+git add index.ts
+git add lib/cli.ts
+git commit -m 'feat(index): add new killer feature'
+
+git add CHANGELOG.md
+git commit -m 'docs(changelog): regenerate'
 ```
 
-### Tips
+### Other Features
 
 - Use `gac --help` for more usage information, including listing all aliases.
 - Use `gac ... --no-verify` to perform an [unverified commit][8].
-- Executing `gac` with no paths staged and no path arguments will cause an
-  error.
-- Specifying more than one scope option will cause an error.
-- The scope string argument must be omitted when specifying a scope option.
-- If `commit-message` describes a [breaking change][9], [an exclamation point
-  will be prepended to the colon][11] in the final commit message.
+- If `commit-message` describes a [breaking change][9], [an exclamation point is
+  prepended to the colon][11] in the final commit message.
+- `gac` works with both currently staged files in addition to any passed path
+  arguments. This makes it easy to, for instance, stage files with
+  [vscode](https://code.visualstudio.com/docs/editor/versioncontrol#_commit) or
+  [`git add -p`](https://git-scm.com/book/en/v2/Git-Tools-Interactive-Staging#_staging_patches)
+  then use `gac` to quickly compose an [atomic][7] [conventional commit][10].
 
 ### Importing as a Module
 
