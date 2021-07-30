@@ -63,7 +63,7 @@ export async function makeCommit(message: string, pipeOutput = true): Promise<vo
 /**
  * Attempts to resolve an arbitrary `path` to a single full file path relative
  * to the repository root. If `path` resolves to no file, an error is thrown. If
- * `path` resolves to more than one file, `path` is considered "arbitrary" and
+ * `path` resolves to more than one file, `path` is considered "ambiguous" and
  * an array of files is returned.
  *
  * Note that this function expects all relevant paths to be tracked by git. If
