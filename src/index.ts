@@ -78,6 +78,11 @@ export function configureProgram(program?: Program): Context {
       force: {
         describe: 'Always stage paths even when doing so could damage the index',
         type: 'boolean'
+      },
+      verify: {
+        describe: 'Use --no-verify to bypass git pre-commit and commit-msg hooks',
+        type: 'boolean',
+        default: 'true'
       }
     })
     .string('_')
@@ -85,12 +90,12 @@ export function configureProgram(program?: Program): Context {
       ['scope-omit', 'scope-basename', 'scope-as-is', 'scope-full'],
       'Scope options:'
     )
-    .group(['help', 'version', 'silent'], 'Other options:')
     .epilogue(
       'Details:' +
         '\n  The commit-scope parameter must be omitted when specifying a scope option. Specifying more than one scope option will fail. Special scope options - and -- alias -o and -b respectively.' +
         '\n\n  If no path arguments are passed, -a will fail. If no path arguments are passed and there is not exactly one staged file, -b will fail. If no path arguments are passed, -f will return the full path if there is exactly one staged file, the deepest common ancestor of all staged files if there is more than one, or fail if there is no non-root common ancestor. If path1 is ambiguous, -f will return the deepest common ancestor.'
     )
+    .group(['help', 'version', 'silent', 'verify'], 'Other options:')
     .example([
       [
         '$0 path/to/file1 feat - "new feature"',
@@ -255,7 +260,7 @@ export function configureProgram(program?: Program): Context {
         }
       }
 
-      await makeCommit(message, !finalArgv.silent);
+      await makeCommit(message, !finalArgv.silent, !finalArgv.verify);
       return finalArgv;
     }
   };

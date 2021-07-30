@@ -4,6 +4,8 @@ import git from 'simple-git';
 import ancestorPath from 'common-ancestor-path';
 import execa from 'execa';
 
+import type { TaskOptions } from 'simple-git';
+
 const debug = debugFactory(`${pkgName}:git-lib`);
 
 /**
@@ -43,20 +45,28 @@ export async function stagePaths(paths: string[]): Promise<void> {
  * `pipeOutput=false` will silence the underlying child process; it is `true` by
  * default.
  */
-export async function makeCommit(message: string, pipeOutput = true): Promise<void> {
+export async function makeCommit(
+  message: string,
+  pipeOutput = true,
+  noVerify = false
+): Promise<void> {
   debug(`makeCommit: pipe output: ${pipeOutput}`);
+  debug(`makeCommit: no-verify: ${noVerify}`);
   debug('makeCommit: creating commit with message: %O', message);
+
+  const extraOpts: TaskOptions = noVerify ? ['--no-verify'] : [];
 
   if (pipeOutput) {
     // ? We use git directly here so we can inherit stdio for term color support
-    await execa('git', ['commit', '-m', message], {
+    await execa('git', ['commit', '-m', message, ...extraOpts], {
       stdio: 'inherit'
     }).catch(() => {
       throw new Error('commit operation failed');
     });
   } else {
-    if (!(await git().commit(message)).commit)
+    if (!(await git().commit(message, extraOpts)).commit) {
       throw new Error('silent commit operation failed');
+    }
   }
 }
 
