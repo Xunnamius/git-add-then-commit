@@ -61,16 +61,19 @@ const runTest = async ({ source, dest }: { source: SourceType; dest: DestType })
       path: \`\${__dirname}/dist\`,
       ${dest == DestType.CJS_LIB ? "libraryTarget: 'commonjs2'" : ''}
     }
-  }`;
+  };`;
 
   await withMockedFixture(async (ctx) => {
     if (!ctx.testResult) throw new Error('must use webpack-test fixture');
 
-    debug('(expecting exit code to be 0)');
-    debug('(expecting stdout to be "working")');
+    debug('(expecting stderr to be "")');
+    expect(ctx.testResult.stderr).toBeEmpty();
 
-    expect(ctx.testResult.code).toBe(0);
+    debug('(expecting stdout to be "working")');
     expect(ctx.testResult.stdout).toBe('working');
+
+    debug('(expecting exit code to be 0)');
+    expect(ctx.testResult.code).toBe(0);
   });
 
   delete fixtureOptions.initialFileContents[indexPath];
