@@ -62,7 +62,7 @@ const libConfig = {
     rules: [{ test: /\.(ts|js)x?$/, loader: 'babel-loader', exclude: /node_modules/ }]
   },
   optimization: { usedExports: true },
-  ignoreWarnings: [/critical dependency:/i],
+  ignoreWarnings: [/critical dependency: the request of a dependency is an expression/i],
   plugins: [...envPlugins]
 };
 
@@ -95,7 +95,7 @@ const libConfig = {
     rules: [{ test: /\.(ts|js)x?$/, loader: 'babel-loader', exclude: /node_modules/ }]
   },
   optimization: { usedExports: true },
-  ignoreWarnings: [/critical dependency:/i],
+  ignoreWarnings: [/critical dependency: the request of a dependency is an expression/i],
   plugins: [
     ...envPlugins,
     // * ▼ For non-bundled externals, make entry file executable w/ shebang
@@ -130,7 +130,7 @@ const cliConfig = {
     rules: [{ test: /\.(ts|js)x?$/, loader: 'babel-loader', exclude: /node_modules/ }]
   },
   optimization: { usedExports: true },
-  ignoreWarnings: [/critical dependency:/i],
+  ignoreWarnings: [/critical dependency: the request of a dependency is an expression/i],
   plugins: [
     ...envPlugins,
     // * ▼ For bundled CLI applications, make entry file executable w/ shebang
