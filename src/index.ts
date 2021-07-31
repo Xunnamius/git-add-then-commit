@@ -25,12 +25,13 @@ export type Context = {
 };
 
 const debug = debugFactory(`${pkgName}:parse`);
-const {
-  parserOpts: { noteKeywords }
-} = projectorConfigFactory();
+// TODO: take noteKeywords from tree-shakable conventional-changelog-projector
+// const {
+//   parserOpts: { noteKeywords }
+// } = projectorConfigFactory();
 // ? See: https://shorturl.at/dotG0
 const breakingRegex = RegExp(
-  '^[\\s|*]*(' + noteKeywords.join('|') + ')[:\\s]+(.*)',
+  '^[\\s|*]*(BREAKING|BREAKING CHANGE|BREAKING CHANGES)[:\\s]+(.*)',
   'im'
 );
 const isBreakingChange = (message: string) => breakingRegex.test(message);
