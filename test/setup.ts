@@ -384,6 +384,9 @@ export function npmLinkSelfFixture(): MockFixture {
   };
 }
 
+// TODO: XXX: make ALL debug output print error (match with regex if found) so
+// TODO: XXX: we don't miss any helpful error messages!
+// TODO: XXX:
 // TODO: XXX: make this into a separate (mock-fixture) package (along w/ below)
 export function webpackTestFixture(): MockFixture {
   return {
