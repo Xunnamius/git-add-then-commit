@@ -1,6 +1,5 @@
 import { name as pkgName } from '../package.json';
 import { parse as parsePath, basename } from 'path';
-import projectorConfigFactory from '@xunnamius/conventional-changelog-projector';
 import yargs from 'yargs/yargs';
 import debugFactory from 'debug';
 
