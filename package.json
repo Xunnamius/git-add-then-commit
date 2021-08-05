@@ -196,7 +196,7 @@
     "remark-lint-no-undefined-references": "^3.0.0",
     "remark-lint-no-unused-definitions": "^2.0.1",
     "remark-lint-ordered-list-marker-style": "^2.0.1",
-    "remark-reference-links": "^5.0.0",
+    "remark-reference-links": "^6.0.0",
     "semantic-release": "github:xunnamius/semantic-release",
     "semver": "^7.3.5",
     "sort-package-json": "github:xunnamius/sort-package-json",
