@@ -172,13 +172,13 @@ Given the following filesystem structure:
 The following are equivalent:
 
 ```bash
-gac src/index.ts src feat --scope-as-is 'add new killer feature'
+gac src/iNdex.ts src feat --scope-as-is 'add new killer feature'
 
-git add src/index.ts
+git add src/iNdex.ts
 git add src/cli.ts
 git add src/errors.ts
 git add src/git.ts
-git commit -m 'feat(src/index.ts): add new killer feature'
+git commit -m 'feat(src/iNdex.ts): add new killer feature'
 ```
 
 #### Full
