@@ -284,65 +284,44 @@ describe('::configureProgram', () => {
     }, ['path/to/a/package.json', 'type2', '---', 'message2']);
   });
 
-  it('--scope-full works with non-ambiguous already-basenamed first path arg', async () => {
+  it('commit type is always lowercased', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      await expect(
+        runProgram(['file', 'TyPe', '-', 'message'])
+      ).resolves.not.toBeUndefined();
+      expect(mockedFullname).toBeCalledTimes(1);
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+    });
+  });
+
+  it('--scope-full works with non-ambiguous first path with file extension', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
 
-    const addPathsToMockStaged = ['file1', 'file2', 'file3'];
+    const addPathsToMockStaged = ['b/file.json', 'b/other-file'];
 
     mockedStagePaths.mockImplementationOnce(async () => {
       addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
     });
 
     mockedFullname.mockReturnValueOnce(
-      Promise.resolve({ ambiguous: false, file: 'file1' })
+      Promise.resolve({ ambiguous: false, file: 'b/file.json' })
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(
+        runProgram([...addPathsToMockStaged, 'type', '-f', 'message'])
+      ).resolves.not.toBeUndefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
-  });
-
-  it('--scope-full errors with ambiguous first path arg and no common ancestor', async () => {
-    expect.hasAssertions();
-
-    mockStagedPaths.clear();
-
-    const addPathsToMockStaged = ['file1', 'file2', 'file3'];
-
-    mockedCommonAncestor.mockReturnValueOnce(null);
-
-    mockedStagePaths.mockImplementationOnce(async () => {
-      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
     });
-
-    mockedFullname.mockReturnValueOnce(
-      Promise.resolve({
-        ambiguous: true,
-        files: [
-          'file1/actually/path/to/many1',
-          'file1/actually/path/to/many2',
-          'file1/actually/path/to/many3'
-        ]
-      })
-    );
-
-    await withMocks(async () => {
-      await expect(runProgram([])).rejects.toMatchObject({
-        message: expect.stringContaining('ambiguous')
-      });
-
-      expect(mockedCommonAncestor).toBeCalled();
-      expect(mockedStagePaths).toBeCalled();
-      expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
   });
 
-  it('--scope-full works with non-ambiguous more complex first path arg', async () => {
+  it('--scope-full works with non-ambiguous first path without file extension', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
@@ -367,7 +346,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('--scope-full works when adding already-staged file paths with no path args passed', async () => {
+  it('--scope-full works with staged paths with no path args', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
@@ -390,12 +369,33 @@ describe('::configureProgram', () => {
     }, ['type', '-f', 'message']);
   });
 
-  it('--scope-full works when adding non-ambiguous already-staged file paths with path args', async () => {
+  it('--scope-full works with single staged path with no path args', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
 
-    const addPathsToMockStaged = ['a/file1', 'a/file2', 'a/file2'];
+    const addPathsToMockStaged = ['x/file'];
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
+
+    await withMocks(async () => {
+      await expect(runProgram([])).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).not.toBeCalled();
+    }, ['type', '-f', 'message']);
+  });
+
+  it('--scope-full works with staged paths with path args', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['a/file1', 'a/file2', 'a/file3'];
 
     mockedStagePaths.mockImplementationOnce(async () => {
       addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
@@ -418,58 +418,13 @@ describe('::configureProgram', () => {
     }, [...addPathsToMockStaged, 'type', '-f', 'message']);
   });
 
-  it('--scope-full works when adding single already-staged file path with no path args passed', async () => {
+  it('--scope-full works with ambiguous first path with common ancestor', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
 
-    const addPathsToMockStaged = ['x/file'];
+    const addPathsToMockStaged = ['file1', 'file2', 'file3'];
 
-    mockedStagePaths.mockImplementationOnce(async () => {
-      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
-    });
-
-    addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
-
-    await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
-      expect(mockedCommonAncestor).not.toBeCalled();
-      expect(mockedStagePaths).toBeCalled();
-      expect(mockedFullname).not.toBeCalled();
-    }, ['type', '-f', 'message']);
-  });
-
-  it('--scope-root works with non-ambiguous already-basenamed first path arg', async () => {
-    expect.hasAssertions();
-
-    mockStagedPaths.clear();
-
-    const addPathsToMockStaged = ['file1.json', 'file2.json', 'file3.json'];
-
-    mockedStagePaths.mockImplementationOnce(async () => {
-      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
-    });
-
-    mockedFullname.mockReturnValueOnce(
-      Promise.resolve({ ambiguous: false, file: 'file1.json' })
-    );
-
-    await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
-      expect(mockedCommonAncestor).not.toBeCalled();
-      expect(mockedStagePaths).toBeCalled();
-      expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-r', 'message']);
-  });
-
-  it('--scope-root errors with ambiguous first path arg and no common ancestor', async () => {
-    expect.hasAssertions();
-
-    mockStagedPaths.clear();
-
-    const addPathsToMockStaged = ['file1', 'file2.json', 'file3.json'];
-
-    // ! No common ancestor (even though the data paths do share file1 ancestor)
     mockedCommonAncestor.mockReturnValueOnce(null);
 
     mockedStagePaths.mockImplementationOnce(async () => {
@@ -495,10 +450,45 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-r', 'message']);
+    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
   });
 
-  it('--scope-root works with non-ambiguous more complex first path arg', async () => {
+  it('--scope-full errors with ambiguous first path and no common ancestor', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['file1', 'file2', 'file3'];
+
+    mockedCommonAncestor.mockReturnValueOnce(null);
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({
+        ambiguous: true,
+        files: [
+          'file1/actually/path/to/many1',
+          'file1/actually/path/to/many2',
+          'file1/actually/path/to/many3'
+        ]
+      })
+    );
+
+    await withMocks(async () => {
+      await expect(runProgram([])).rejects.toMatchObject({
+        message: expect.stringContaining('ambiguous')
+      });
+
+      expect(mockedCommonAncestor).toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
+  });
+
+  it('--scope-root works with non-ambiguous non-index path using 1st directory', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
@@ -515,87 +505,257 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '-r', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
       ).resolves.not.toBeUndefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(b): message', true, false);
     });
   });
 
-  it('--scope-root works when adding already-staged file paths with no path args passed', async () => {
+  it('--scope-root works with non-ambiguous index path at root with ext', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
 
-    const addPathsToMockStaged = ['a/file1.json', 'a/file2.json', 'a/file2.json'];
-
-    mockedCommonAncestor.mockReturnValueOnce('a');
+    const addPathsToMockStaged = ['index.json'];
 
     mockedStagePaths.mockImplementationOnce(async () => {
       addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
     });
 
-    addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'index.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+      ).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(index): message', true, false);
+    });
+  });
+
+  it('--scope-root works with non-ambiguous index path at root without ext', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['index'];
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'index' })
+    );
+
+    await withMocks(async () => {
+      await expect(
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+      ).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(index): message', true, false);
+    });
+  });
+
+  it('--scope-root works with non-ambiguous non-index path with matching 1st directory and non-matching 2nd directory', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['type/second.directory/file.json'];
+
+    addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'type/second.directory/file.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(runProgram([])).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).not.toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith(
+        'type(second.directory): message',
+        true,
+        false
+      );
+    }, ['type', '---', 'message']);
+  });
+
+  it('--scope-root works with non-ambiguous non-index path with matching 1st directory and no 2nd directory', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['type/feat.json'];
+
+    addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'type/file.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(runProgram([])).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).not.toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(feat): message', true, false);
+    }, ['type', '-r', 'message']);
+  });
+
+  it('--scope-root omits scope with non-ambiguous index path with matching 1st directory and no 2nd directory', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['type/index.json'];
+
+    addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'type/index.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(runProgram([])).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).not.toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+    }, ['type', '---', 'message']);
+  });
+
+  it('--scope-root omits scope with non-ambiguous non-index path with matching 1st directory and matching 2nd directory', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['type/type/file.json'];
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'type/type/file.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(runProgram([])).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+    }, [...addPathsToMockStaged, 'type', '---', 'message']);
+  });
+
+  it('--scope-root works with ambiguous non-index path with common ancestor using 1st directory', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['fileX'];
+
+    mockedCommonAncestor.mockReturnValueOnce('file1/actually/path/to');
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({
+        ambiguous: true,
+        files: [
+          'file1/actually/path/to/many1',
+          'file1/actually/path/to/many2',
+          'file1/actually/path/to/many3'
+        ]
+      })
+    );
+
+    await withMocks(async () => {
+      await expect(
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+      ).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(file1): message', true, false);
+    });
+  });
+
+  it('--scope-root omits scope with ambiguous index path with common ancestor with first and 2nd directory matching', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['type/type', 'file2.json', 'file3.json'];
+
+    mockedCommonAncestor.mockReturnValueOnce('type/type');
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({
+        ambiguous: true,
+        files: ['type/type/index.js', 'type/type/file1']
+      })
+    );
 
     await withMocks(async () => {
       await expect(runProgram([])).resolves.not.toBeUndefined();
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
-      expect(mockedFullname).not.toBeCalled();
-    }, ['type', '-r', 'message']);
+      expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+    }, [...addPathsToMockStaged, 'type', '---', 'message']);
   });
 
-  it('--scope-root works when adding non-ambiguous already-staged file paths with path args', async () => {
+  it('--scope-root errors with ambiguous path with no common ancestor', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
 
-    const addPathsToMockStaged = ['a/file1.json', 'a/file2.json', 'a/file2.json'];
+    const addPathsToMockStaged = ['type', 'file2.json', 'file3.json'];
+
+    mockedCommonAncestor.mockReturnValueOnce(null);
 
     mockedStagePaths.mockImplementationOnce(async () => {
       addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
     });
 
-    mockedFullname.mockImplementationOnce(() => Promise.reject('#a'));
-    mockedFullname.mockImplementationOnce(() => Promise.reject('#b'));
-    mockedFullname.mockImplementationOnce(() => Promise.reject('#c'));
     mockedFullname.mockReturnValueOnce(
-      Promise.resolve({ ambiguous: false, file: 'a/file1.json' })
+      Promise.resolve({
+        ambiguous: true,
+        files: ['x', 'y', 'z']
+      })
     );
 
-    addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
-
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
-      expect(mockedCommonAncestor).not.toBeCalled();
+      await expect(runProgram([])).rejects.toMatchObject({
+        message: expect.stringContaining('ambiguous')
+      });
+
+      expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-r', 'message']);
+    }, [...addPathsToMockStaged, 'type', '---', 'message']);
   });
 
-  it('--scope-root works when adding single already-staged file path with no path args passed', async () => {
-    expect.hasAssertions();
-
-    mockStagedPaths.clear();
-
-    const addPathsToMockStaged = ['x/file.json'];
-
-    mockedStagePaths.mockImplementationOnce(async () => {
-      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
-    });
-
-    addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
-
-    await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
-      expect(mockedCommonAncestor).not.toBeCalled();
-      expect(mockedStagePaths).toBeCalled();
-      expect(mockedFullname).not.toBeCalled();
-    }, ['type', '-r', 'message']);
-  });
-
-  it('--scope-basename errors with ambiguous first path arg', async () => {
+  it('--scope-basename errors with ambiguous first path', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
@@ -618,7 +778,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('--scope-basename works with single already-staged file', async () => {
+  it('--scope-basename works with non-ambiguous staged file', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();
@@ -632,7 +792,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('does not re-stage partially pre-staged paths', async () => {
+  it('does not re-stage partially pre-staged path args', async () => {
     expect.hasAssertions();
 
     mockStagedPaths.clear();

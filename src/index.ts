@@ -178,7 +178,9 @@ export function configureProgram(program?: Program): Context {
           [params[0], , params[1]]
         : params;
 
-      let message = `${commitType}(${commitScope}): ${commitMessage}`;
+      const computedCommitType = commitType.toLowerCase();
+
+      let message = `${computedCommitType}(${commitScope}): ${commitMessage}`;
       debug(`initial message: ${message}`);
 
       if (preStagedPaths.length) {
@@ -217,7 +219,7 @@ export function configureProgram(program?: Program): Context {
 
         if (finalArgv.scopeOmit) {
           debug('deriving as omit');
-          message = `${commitType}: ${commitMessage}`;
+          message = `${computedCommitType}: ${commitMessage}`;
         } else {
           let computedScope: string;
 
@@ -248,13 +250,17 @@ export function configureProgram(program?: Program): Context {
             const scope = finalArgv.scopeRoot ? 'root' : 'full';
             debug(`deriving as ${scope}`);
 
+            const removeExtension = (p: string) => {
+              return p.split('.').slice(0, -1).join('.') || p;
+            };
+
             const getAncestor = (files: string[]) => {
               const ancestor = commonAncestor(files);
               if (!ancestor) {
                 throw new Error(
-                  `use of --scope-${scope} is ambiguous without common non-root ${
-                    finalArgv.scopeFull ? 'ancestor' : 'first directory in path'
-                  }`
+                  `use of --scope-${scope} is ambiguous without common ${
+                    finalArgv.scopeFull ? 'non-root' : 'first or second'
+                  } ancestor`
                 );
               }
               return ancestor;
@@ -275,11 +281,29 @@ export function configureProgram(program?: Program): Context {
               else computedScope = getAncestor(latestStagedPaths);
             }
 
-            computedScope = (
-              finalArgv.scopeRoot
-                ? computedScope.split('/').filter(Boolean)[0]
-                : computedScope
-            ).toLowerCase();
+            computedScope = computedScope.toLowerCase();
+
+            const splitScope = computedScope.split('/').filter(Boolean);
+
+            if (finalArgv.scopeRoot) {
+              computedScope = splitScope[0];
+
+              // ? splitScope[0] is a first directory
+              if (splitScope[1]) {
+                if (splitScope[0] == computedCommitType) {
+                  // ? splitScope[1] is a second directory
+                  if (splitScope[2]) computedScope = splitScope[1];
+                  // ? splitScope[1] is a file name
+                  else {
+                    computedScope = removeExtension(splitScope[1]);
+                    if (computedScope == 'index') computedScope = '';
+                  }
+                }
+                // ? splitScope[0] is a file name
+              } else computedScope = removeExtension(computedScope);
+            }
+
+            if (computedScope == computedCommitType) computedScope = '';
           } else {
             debug('deriving as as-is');
 
@@ -289,7 +313,10 @@ export function configureProgram(program?: Program): Context {
               throw new Error('use of --scope-as-is without path argument is ambiguous');
           }
 
-          message = `${commitType}(${computedScope}): ${commitMessage}`;
+          message =
+            computedCommitType +
+            (computedScope ? `(${computedScope}): ` : ': ') +
+            commitMessage;
         }
       }
 
