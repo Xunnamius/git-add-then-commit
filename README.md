@@ -164,7 +164,7 @@ Given the following filesystem structure:
 
     .
     └── src
-        ├── index.ts <MODIFIED>
+        ├── iNdex.ts <MODIFIED>
         ├── cli.ts <MODIFIED>
         ├── errors.ts <MODIFIED>
         └── git.ts <MODIFIED>
