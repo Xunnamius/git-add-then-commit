@@ -12,7 +12,7 @@ const transformRenameImport = [
   {
     replacements: [
       { original: '../package.json', replacement: '../../package.json' },
-      // ? see: https://shorturl.at/bkszM
+      // ? see: https://bit.ly/3Chxmlb
       { original: '../package.json.mjs', replacement: '../../package.json' }
     ]
   }

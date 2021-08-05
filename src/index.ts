@@ -29,7 +29,7 @@ const debug = debugFactory(`${pkgName}:parse`);
 // const {
 //   parserOpts: { noteKeywords }
 // } = projectorConfigFactory();
-// ? See: https://shorturl.at/dotG0
+// ? See: https://bit.ly/3A8WR6z
 const breakingRegex = RegExp(
   '^[\\s|*]*(BREAKING|BREAKING CHANGE|BREAKING CHANGES)[:\\s]+(.*)',
   'im'
@@ -105,7 +105,7 @@ export function configureProgram(program?: Program): Context {
       'Scope options:'
     )
     .group(['help', 'version', 'silent', 'verify'], 'Other options:')
-    .epilogue('See the full documentation for more details: https://shorturl.at/iuJO7')
+    .epilogue('See the full documentation for more details: https://bit.ly/3AdNSAU')
     .example([
       [
         '$0 path/to/file1 feat - "new feature"',
