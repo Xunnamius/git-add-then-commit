@@ -250,7 +250,7 @@ look nicer in [generated changelogs][5]. Specifically:
 - A small, consistently derived set of scopes are used across the lifetime of
   the repository.
 - Derived scopes are analogous to filesystem structure.
-- Derived scopes tend to be short, sweet, and alphanumeric.
+- Derived scopes tend to be short, sweet, and mostly alphanumeric.
 
 Like [`--scope-full`][6], `--scope-root` will derive `commit-scope` by selecting
 from any path arguments and staged file paths available. Unlike
@@ -286,8 +286,11 @@ On the other hand, if the selected path has a first directory matching
 - If there is no second directory and the file _is_ named "index" (sans
   extension), `commit-scope` is [omitted][3].
 
-At the end of the process, if `commit-scope` matches `commit-type`,
-`commit-scope` is [omitted][3]. Otherwise, `commit-scope` is always lowercased.
+At the end of the process, if `commit-scope` has not already been omitted:
+
+- If `commit-scope` matches `commit-type`, `commit-scope` is [omitted][3].
+- Otherwise, `commit-scope` is 1) lowercased and 2) [split][15] on `"."`, with
+  the first element used as the final `commit-scope`.
 
 ##### Example
 
@@ -302,7 +305,7 @@ Given the following filesystem structure:
     ├── index.ts <MODIFIED>
     ├── lib
     │   ├── api
-    │       └── adapter.ts <MODIFIED>
+    │   │   └── adapter.ts <MODIFIED>
     │   ├── index.ts <MODIFIED>
     │   ├── cli.ts <MODIFIED>
     │   └── git.ts
@@ -395,8 +398,8 @@ git commit -m 'docs(changelog): regenerate'
 
 ### Other Features
 
-- Use `gac --help` for more usage information, including listing all aliases.
-- Use `gac ... --no-verify` to perform an [unverified commit][8].
+- Use `--help` for more usage information, including listing all aliases.
+- Use `--no-verify` to perform an [unverified commit][8].
 - If `commit-message` describes a [breaking change][9], [an exclamation point is
   prepended to the colon][11] in the final commit message.
 - `gac` works with both currently staged files and any paths passed as arguments
@@ -515,3 +518,5 @@ information.
 [13]: https://code.visualstudio.com/docs/editor/versioncontrol#_commit
 [14]:
   https://git-scm.com/book/en/v2/Git-Tools-Interactive-Staging#_staging_patches
+[15]:
+  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split
