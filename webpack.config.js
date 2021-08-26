@@ -1,3 +1,4 @@
+'use strict';
 // This webpack config is used to transpile src to dist, compile externals,
 // compile executables, etc
 
@@ -6,22 +7,36 @@ const { verifyEnvironment } = require('./expect-env');
 const nodeExternals = require('webpack-node-externals');
 const debug = require('debug')(`${require('./package.json').name}:webpack-config`);
 
-let env = {};
+let sanitizedEnv = {};
+let { NODE_ENV: nodeEnv, ...sanitizedProcessEnv } = {
+  ...process.env,
+  NODE_ENV: 'production'
+};
 
 try {
   require('fs').accessSync('.env');
-  env = require('dotenv').config().parsed;
-  debug('new env vars: %O', env);
+  const { NODE_ENV: forceEnv, ...parsedEnv } = require('dotenv').config().parsed;
+  nodeEnv = forceEnv || nodeEnv;
+  sanitizedEnv = parsedEnv;
+  debug(`NODE_ENV: ${nodeEnv}`);
+  debug('sanitized env: %O', sanitizedEnv);
 } catch (e) {
   debug(`env support disabled; reason: ${e}`);
 }
 
+debug('sanitized process env: %O', sanitizedProcessEnv);
 verifyEnvironment();
 
 const envPlugins = [
+  // ? NODE_ENV is not a "default" (unlike below) but an explicit overwrite
+  new DefinePlugin({
+    'process.env.NODE_ENV': JSON.stringify(nodeEnv)
+  }),
   // ? Load our .env results as the defaults (overridden by process.env)
-  new EnvironmentPlugin({ ...env, ...process.env }),
-  // ? Create shim process.env for undefined vars (per my tastes!)
+  new EnvironmentPlugin({ ...sanitizedEnv, ...sanitizedProcessEnv }),
+  // ? Create shim process.env for undefined vars
+  // ! The above already replaces all process.env.X occurrences in the code
+  // ! first, so plugin order is important here
   new DefinePlugin({ 'process.env': '{}' })
 ];
 
@@ -54,7 +69,8 @@ const libConfig = {
   stats: {
     orphanModules: true,
     providedExports: true,
-    usedExports: true
+    usedExports: true,
+    errorDetails: true
   },
 
   resolve: { extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'] },
@@ -87,7 +103,8 @@ const libConfig = {
   stats: {
     orphanModules: true,
     providedExports: true,
-    usedExports: true
+    usedExports: true,
+    errorDetails: true
   },
 
   resolve: { extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'] },
@@ -122,7 +139,8 @@ const cliConfig = {
   stats: {
     orphanModules: true,
     providedExports: true,
-    usedExports: true
+    usedExports: true,
+    errorDetails: true
   },
 
   resolve: { extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'] },
