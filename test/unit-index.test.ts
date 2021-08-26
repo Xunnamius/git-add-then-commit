@@ -540,6 +540,32 @@ describe('::configureProgram', () => {
     });
   });
 
+  it('--scope-root works with non-ambiguous index path at root with multi-ext', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['index.json'];
+
+    mockedStagePaths.mockImplementationOnce(async () => {
+      addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+    });
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: '.index.xedni.2.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+      ).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(index): message', true, false);
+    });
+  });
+
   it('--scope-root works with non-ambiguous index path at root without ext', async () => {
     expect.hasAssertions();
 
@@ -584,11 +610,29 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith(
-        'type(second.directory): message',
-        true,
-        false
-      );
+      expect(mockedMakeCommit).toBeCalledWith('type(second): message', true, false);
+    }, ['type', '---', 'message']);
+  });
+
+  it('--scope-root works with non-ambiguous non-index path with matching 1st directory and non-matching 2nd directory with leading dot', async () => {
+    expect.hasAssertions();
+
+    mockStagedPaths.clear();
+
+    const addPathsToMockStaged = ['type/.github/file.json'];
+
+    addPathsToMockStaged.forEach((a) => mockStagedPaths.add(a));
+
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'type/.github/file.json' })
+    );
+
+    await withMocks(async () => {
+      await expect(runProgram([])).resolves.not.toBeUndefined();
+      expect(mockedCommonAncestor).not.toBeCalled();
+      expect(mockedStagePaths).toBeCalled();
+      expect(mockedFullname).not.toBeCalled();
+      expect(mockedMakeCommit).toBeCalledWith('type(github): message', true, false);
     }, ['type', '---', 'message']);
   });
 

@@ -286,11 +286,10 @@ On the other hand, if the selected path has a first directory matching
 - If there is no second directory and the file _is_ named "index" (sans
   extension), `commit-scope` is [omitted][3].
 
-At the end of the process, if `commit-scope` has not already been omitted:
-
-- If `commit-scope` matches `commit-type`, `commit-scope` is [omitted][3].
-- Otherwise, `commit-scope` is 1) lowercased and 2) [split][15] on `"."`, with
-  the first element used as the final `commit-scope`.
+At the end of the process, if it has not already been omitted, `commit-scope` is
+lowercased and [split][15] on `"."` with the first element used as the final
+`commit-scope`. Finally, if `commit-scope` matches `commit-type`, `commit-scope`
+is [omitted][3].
 
 ##### Example
 

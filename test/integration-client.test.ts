@@ -550,6 +550,54 @@ it('--scope-root works with non-ambiguous index path at root', async () => {
   });
 });
 
+it('--scope-root works with various dot paths', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await writeFile(`${root}/index.index.index.json`, 'some-file-stuff');
+    await run(CLI_BIN_PATH, ['index.index.index.json', 'type', '---', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(index): message');
+    expect(commit).toInclude('a/index.index.index.json');
+  });
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run('mkdir', ['-p', 'indx.ndx'], { cwd: root, reject: true });
+    await writeFile(`${root}/indx.ndx/index.json`, 'some-file-stuff');
+    await run(CLI_BIN_PATH, ['indx.ndx/index.json', 'type', '---', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(indx): message');
+    expect(commit).toInclude('a/indx.ndx/index.json');
+  });
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run('mkdir', ['-p', 'type/indx.ndx'], { cwd: root, reject: true });
+    await writeFile(`${root}/type/indx.ndx/index.json`, 'some-file-stuff');
+    await run(CLI_BIN_PATH, ['type/indx.ndx/index.json', 'type', '---', 'message'], {
+      cwd: root,
+      reject: true
+    });
+
+    const commit = await git.show();
+    expect(commit).toInclude('type(indx): message');
+    expect(commit).toInclude('a/type/indx.ndx/index.json');
+  });
+});
+
 it('--scope-root works with non-ambiguous non-index path with matching 1st directory and non-matching 2nd directory', async () => {
   expect.hasAssertions();
 

@@ -250,8 +250,8 @@ export function configureProgram(program?: Program): Context {
             const scope = finalArgv.scopeRoot ? 'root' : 'full';
             debug(`deriving as ${scope}`);
 
-            const removeExtension = (p: string) => {
-              return p.split('.').slice(0, -1).join('.') || p;
+            const removeExtensions = (p: string) => {
+              return p.split('.').filter(Boolean)[0] || p;
             };
 
             const getAncestor = (files: string[]) => {
@@ -295,12 +295,14 @@ export function configureProgram(program?: Program): Context {
                   if (splitScope[2]) computedScope = splitScope[1];
                   // ? splitScope[1] is a file name
                   else {
-                    computedScope = removeExtension(splitScope[1]);
+                    computedScope = removeExtensions(splitScope[1]);
                     if (computedScope == 'index') computedScope = '';
                   }
                 }
-                // ? splitScope[0] is a file name
-              } else computedScope = removeExtension(computedScope);
+              }
+              // ? else: splitScope[0] is a file name
+
+              computedScope = removeExtensions(computedScope);
             }
 
             if (computedScope == computedCommitType) computedScope = '';
