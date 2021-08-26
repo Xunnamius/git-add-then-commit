@@ -444,8 +444,8 @@ information.
   https://img.shields.io/github/last-commit/xunnamius/git-add-then-commit
   'When was the last commit to the official repo?'
 [badge-issues]:
-  https://isitmaintained.com/badge/open/Xunnamius/git-add-then-commit.svg
-  'Number of known issues with this package'
+  https://img.shields.io/github/issues/Xunnamius/git-add-then-commit
+  'Open issues'
 [link-issues]: https://github.com/Xunnamius/git-add-then-commit/issues?q=
 [badge-pulls]:
   https://img.shields.io/github/issues-pr/xunnamius/git-add-then-commit
