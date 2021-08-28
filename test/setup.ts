@@ -1,4 +1,4 @@
-import { name as pkgName, version as pkgVersion } from '../package.json';
+import { name as pkgName, version as pkgVersion } from 'package';
 import { tmpdir } from 'os';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';

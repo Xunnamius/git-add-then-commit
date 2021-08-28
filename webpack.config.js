@@ -1,4 +1,5 @@
 'use strict';
+
 // This webpack config is used to transpile src to dist, compile externals,
 // compile executables, etc
 
@@ -6,6 +7,15 @@ const { EnvironmentPlugin, DefinePlugin, BannerPlugin } = require('webpack');
 const { verifyEnvironment } = require('./expect-env');
 const nodeExternals = require('webpack-node-externals');
 const debug = require('debug')(`${require('./package.json').name}:webpack-config`);
+
+const IMPORT_ALIASES = {
+  universe: `${__dirname}/src/`,
+  multiverse: `${__dirname}/lib/`,
+  testverse: `${__dirname}/test/`,
+  externals: `${__dirname}/external-scripts/`,
+  types: `${__dirname}/types/`,
+  package: `${__dirname}/package.json`
+};
 
 let sanitizedEnv = {};
 let { NODE_ENV: nodeEnv, ...sanitizedProcessEnv } = {
@@ -73,23 +83,36 @@ const libConfig = {
     errorDetails: true
   },
 
-  resolve: { extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'] },
+  resolve: {
+    extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'],
+    // ! If changed, also update these aliases in tsconfig.json,
+    // ! jest.config.js, next.config.ts, and .eslintrc.js
+    alias: IMPORT_ALIASES
+  },
   module: {
     rules: [{ test: /\.(ts|js)x?$/, loader: 'babel-loader', exclude: /node_modules/ }]
   },
   optimization: { usedExports: true },
-  ignoreWarnings: [/critical dependency: the request of a dependency is an expression/i],
   plugins: [...envPlugins]
 };
 
-/*const externalsConfig = {
+/* const externalsConfig = {
   name: 'externals',
   mode: 'production',
   target: 'node',
   node: false,
 
   entry: {
-    dummy: `${__dirname}/external-scripts/dummy.ts`
+    'ban-hammer': `${__dirname}/external-scripts/ban-hammer.ts`,
+    'prune-data': `${__dirname}/external-scripts/prune-data.ts`,
+
+    // 'initialize-data': `${__dirname}/external-scripts/initialize-data/index.ts`,
+    // 'worker-friends': `${__dirname}/external-scripts/initialize-data/worker-friends.ts`,
+    // 'worker-memes': `${__dirname}/external-scripts/initialize-data/worker-memes.ts`,
+    // 'worker-interactions': `${__dirname}/external-scripts/initialize-data/worker-interactions.ts`,
+    // 'worker-chats': `${__dirname}/external-scripts/initialize-data/worker-chats.ts`,
+
+    // 'simulate-activity': `${__dirname}/external-scripts/simulate-activity/index.ts`
   },
 
   output: {
@@ -107,18 +130,28 @@ const libConfig = {
     errorDetails: true
   },
 
-  resolve: { extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'] },
+  resolve: {
+    extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'],
+    // ! If changed, also update these aliases in tsconfig.json,
+    // ! jest.config.js, next.config.ts, and .eslintrc.js
+    alias: IMPORT_ALIASES
+  },
   module: {
-    rules: [{ test: /\.(ts|js)x?$/, loader: 'babel-loader', exclude: /node_modules/ }]
+    rules: [
+      {
+        test: /\.(ts|js)x?$/,
+        exclude: /node_modules/,
+        use: 'babel-loader'
+      }
+    ]
   },
   optimization: { usedExports: true },
-  ignoreWarnings: [/critical dependency: the request of a dependency is an expression/i],
   plugins: [
     ...envPlugins,
     // * ▼ For non-bundled externals, make entry file executable w/ shebang
     new BannerPlugin({ banner: '#!/usr/bin/env node', raw: true, entryOnly: true })
   ]
-};*/
+}; */
 
 const cliConfig = {
   name: 'cli',
@@ -143,20 +176,20 @@ const cliConfig = {
     errorDetails: true
   },
 
-  resolve: { extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'] },
+  resolve: {
+    extensions: ['.ts', '.wasm', '.mjs', '.cjs', '.js', '.json'],
+    // ! If changed, also update these aliases in tsconfig.json,
+    // ! jest.config.js, next.config.ts, and .eslintrc.js
+    alias: IMPORT_ALIASES
+  },
   module: {
     rules: [{ test: /\.(ts|js)x?$/, loader: 'babel-loader', exclude: /node_modules/ }]
   },
   optimization: { usedExports: true },
-  ignoreWarnings: [/critical dependency: the request of a dependency is an expression/i],
   plugins: [
     ...envPlugins,
     // * ▼ For bundled CLI applications, make entry file executable w/ shebang
-    new BannerPlugin({
-      banner: '#!/usr/bin/env node',
-      raw: true,
-      entryOnly: true
-    })
+    new BannerPlugin({ banner: '#!/usr/bin/env node', raw: true, entryOnly: true })
   ]
 };
 

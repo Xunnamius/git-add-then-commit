@@ -1,4 +1,4 @@
-import { name as pkgName } from '../package.json';
+import { name as pkgName } from 'package';
 import debugFactory from 'debug';
 import git from 'simple-git';
 import ancestorPath from 'common-ancestor-path';

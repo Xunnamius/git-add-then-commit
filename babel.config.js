@@ -4,18 +4,16 @@
 
 // ? https://nodejs.org/en/about/releases
 const NODE_LTS = 'maintained node versions';
-
-const debug = require('debug')(`${require('./package.json').name}:babel-config`);
+const pkgName = require('./package.json').name;
+const debug = require('debug')(`${pkgName}:babel-config`);
+const { determineModuleTypes } = require('webpack-node-module-types/sync');
 
 // ? Fix relative local imports referencing package.json (.dist/esm/...)
 const transformRenameImport = [
   'transform-rename-import',
   {
-    replacements: [
-      { original: '../package.json', replacement: '../../package.json' },
-      // ? see: https://bit.ly/3Chxmlb
-      { original: '../package.json.mjs', replacement: '../../package.json' }
-    ]
+    // ? See: https://bit.ly/38hFTa8
+    replacements: [{ original: 'package', replacement: `${pkgName}/package.json` }]
   }
 ];
 
@@ -29,6 +27,7 @@ module.exports = {
     [
       'transform-default-named-imports',
       {
+        test: [...determineModuleTypes().cjs, 'package'],
         exclude: [
           /* /^next([/?#].+)?/, /^mongodb([/?#].+)?/ */
         ]

@@ -1,4 +1,4 @@
-import { name as pkgName } from '../package.json';
+import { name as pkgName } from 'package';
 import { parse as parsePath, basename } from 'path';
 import yargs from 'yargs/yargs';
 import debugFactory from 'debug';

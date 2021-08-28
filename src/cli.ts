@@ -1,4 +1,4 @@
-import { name as pkgName } from '../package.json';
+import { name as pkgName } from 'package';
 import { configureProgram } from './index';
 import debugFactory from 'debug';
 

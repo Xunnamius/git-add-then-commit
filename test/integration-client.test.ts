@@ -1,5 +1,5 @@
 /* eslint-disable jest/no-conditional-expect */
-import { name as pkgName, bin as pkgBin } from '../package.json';
+import { name as pkgName, bin as pkgBin } from 'package';
 import { promises as fs } from 'fs';
 import fixtures from './fixtures';
 import del from 'del';
