@@ -152,7 +152,11 @@ const cliConfig = {
   plugins: [
     ...envPlugins,
     // * ▼ For bundled CLI applications, make entry file executable w/ shebang
-    new BannerPlugin({ banner: '#!/usr/bin/env node', raw: true, entryOnly: true })
+    new BannerPlugin({
+      banner: '#!/usr/bin/env node',
+      raw: true,
+      entryOnly: true
+    })
   ]
 };
 

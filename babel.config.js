@@ -1,3 +1,4 @@
+'use strict';
 // * Every now and then, we adopt best practices from CRA
 // * https://tinyurl.com/yakv4ggx
 
@@ -25,7 +26,14 @@ module.exports = {
     '@babel/plugin-proposal-function-bind',
     '@babel/plugin-transform-typescript',
     // ? Interoperable named CJS imports for free
-    'transform-default-named-imports'
+    [
+      'transform-default-named-imports',
+      {
+        exclude: [
+          /* /^next([/?#].+)?/, /^mongodb([/?#].+)?/ */
+        ]
+      }
+    ]
   ],
   // ? Sub-keys under the "env" config key will augment the above
   // ? configuration depending on the value of NODE_ENV and friends. Default
@@ -38,6 +46,11 @@ module.exports = {
         ['@babel/preset-env', { targets: { node: true } }],
         ['@babel/preset-typescript', { allowDeclareFields: true }]
         // ? We don't care about minification
+      ],
+      plugins: [
+        // ? Only active when testing, the plugin solves the following problem:
+        // ? https://stackoverflow.com/q/40771520/1367414
+        'explicit-exports-references'
       ]
     },
     // * Used by `npm run build`
@@ -52,7 +65,7 @@ module.exports = {
           }
         ],
         ['@babel/preset-typescript', { allowDeclareFields: true }]
-        // ? Webpack will handle minification
+        // ? Minification is handled by Webpack
       ]
     },
     // * Used by `npm run build-externals`
@@ -60,7 +73,7 @@ module.exports = {
       presets: [
         ['@babel/preset-env', { targets: { node: true } }],
         ['@babel/preset-typescript', { allowDeclareFields: true }]
-        // ? Webpack will handle minification
+        // ? Minification is handled by Webpack
       ],
       plugins: [transformRenameImport]
     },
