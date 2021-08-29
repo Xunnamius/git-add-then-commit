@@ -425,6 +425,10 @@ await parse(['path', 'type', '--no-scope', 'commit message here']);
 
 Further documentation can be found under [`docs/`][docs].
 
+### License
+
+[![FOSSA analysis][badge-fossa]][link-fossa]
+
 ## Contributing and Support
 
 **[New issues][choose-new-issue] and [pull requests][pr-compare] are always
@@ -468,6 +472,11 @@ information.
   "This package's source license"
 [link-license]:
   https://github.com/Xunnamius/git-add-then-commit/blob/main/LICENSE
+[badge-fossa]:
+  https://app.fossa.com/api/projects/git%2Bgithub.com%2FXunnamius%2Fgit-add-then-commit.svg?type=large
+  "Analysis of this package's license obligations"
+[link-fossa]:
+  https://app.fossa.com/projects/git%2Bgithub.com%2FXunnamius%2Fgit-add-then-commit
 [badge-npm]:
   https://api.ergodark.com/badges/npm-pkg-version/git-add-then-commit
   'Install this package using npm or yarn!'
