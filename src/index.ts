@@ -188,9 +188,9 @@ export function configureProgram(program?: Program): Context {
           debug('performing dangerous operation check');
 
           // ? We transform each path arg into all the full paths it represents
-          // ? **conditioned on the currently (i.e. "pre-") staged paths**. If any
-          // ? of the path args reference pre-staged paths and --force is not in
-          // ? effect, error rather than clobber the index with bad state
+          // ? **conditioned on the currently (i.e. "pre-") staged paths**. If
+          // ? any of the path args reference pre-staged paths and --force is
+          // ? not in effect, error rather than clobber the index with bad state
           const indexIsInDanger = (
             await Promise.allSettled(passedPaths.map((p) => fullname(p)))
           )

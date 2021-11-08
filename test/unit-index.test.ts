@@ -102,10 +102,10 @@ describe('::configureProgram', () => {
       // * These types of errors should be caught by commit-lint!
       await expect(
         runProgram(['type', '--scope-omit', 'scope', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       await expect(
         runProgram(['file1', 'file2', 'type', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
 
       expect(mockedMakeCommit).toBeCalledWith('scope: message', true, false);
       expect(mockedMakeCommit).toBeCalledWith('file2(type): message', true, false);
@@ -177,7 +177,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram(['file', 'type', '-', 'message', '--no-verify'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type: message', true, true);
     });
   });
@@ -188,7 +188,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram(['file', 'type', '-', 'message\n\nBREAKING: big change'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith(
         'type!: message\n\nBREAKING: big change',
         true,
@@ -199,7 +199,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram(['file', 'type', 'scope', 'message\n\nBREAKING CHANGE: big change'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith(
         'type(scope)!: message\n\nBREAKING CHANGE: big change',
         true,
@@ -212,9 +212,7 @@ describe('::configureProgram', () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
-      await expect(
-        runProgram(['file', 'type', '-', 'message'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['file', 'type', '-', 'message'])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(1);
       expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
     });
@@ -229,9 +227,7 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'file' })
       );
 
-      await expect(
-        runProgram(['file', 'type', '--', 'message'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['file', 'type', '--', 'message'])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(2);
       expect(mockedMakeCommit).toBeCalledWith('type(file): message', true, false);
     });
@@ -246,7 +242,7 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'path/to/a/file2' })
       );
 
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(2);
       expect(mockedMakeCommit).toBeCalledWith('type2(file2): message2', true, false);
     }, ['path/to/a/file2', 'type2', '--', 'message2']);
@@ -263,7 +259,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['package.json', 'type', '---', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(2);
       expect(mockedMakeCommit).toBeCalledWith('type(package): message', true, false);
     });
@@ -278,7 +274,7 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'path/to/a/package.json' })
       );
 
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(2);
       expect(mockedMakeCommit).toBeCalledWith('type2(path): message2', true, false);
     }, ['path/to/a/package.json', 'type2', '---', 'message2']);
@@ -288,9 +284,7 @@ describe('::configureProgram', () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
-      await expect(
-        runProgram(['file', 'TyPe', '-', 'message'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['file', 'TyPe', '-', 'message'])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(1);
       expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
     });
@@ -314,7 +308,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '-f', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -339,7 +333,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '-f', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -362,7 +356,7 @@ describe('::configureProgram', () => {
     addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
@@ -383,7 +377,7 @@ describe('::configureProgram', () => {
     addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
@@ -411,7 +405,7 @@ describe('::configureProgram', () => {
     addPathsToMockStaged.forEach((file) => mockStagedPaths.add(file));
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -506,7 +500,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -532,7 +526,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -558,7 +552,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -584,7 +578,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -606,7 +600,7 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
@@ -628,7 +622,7 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
@@ -650,7 +644,7 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
@@ -672,7 +666,7 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
@@ -696,7 +690,7 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -731,7 +725,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -760,7 +754,7 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram([])).resolves.not.toBeUndefined();
+      await expect(runProgram([])).resolves.toBeDefined();
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
@@ -829,7 +823,7 @@ describe('::configureProgram', () => {
     mockStagedPaths.add('b/file1.js');
 
     await withMocks(async () => {
-      await expect(runProgram(['type', '--', 'message'])).resolves.not.toBeUndefined();
+      await expect(runProgram(['type', '--', 'message'])).resolves.toBeDefined();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
       expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message', true, false);
@@ -874,7 +868,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       await expect(
         runProgram(['b', 'type', '--', 'message', '--force'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(1);
       expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message', true, false);
     });
@@ -884,9 +878,7 @@ describe('::configureProgram', () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
-      await expect(
-        runProgram(['type', 'SCOPE', 'message1'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['type', 'SCOPE', 'message1'])).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(SCOPE): message1', true, false);
       expect(mockedStagePaths).toBeCalledWith([]);
       expect(mockedFullname).not.toBeCalled();
@@ -903,7 +895,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['file1', 'type', 'SCOPE', 'message2'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(SCOPE): message2', true, false);
       expect(mockedStagePaths).toBeCalled();
     });
@@ -923,7 +915,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['FILE1', 'type', '--', 'message3'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(file1): message3', true, false);
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalledTimes(2);
@@ -942,9 +934,7 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2' })
       );
 
-      await expect(
-        runProgram(['PATH', 'type', '--', 'message4'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['PATH', 'type', '--', 'message4'])).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(file2): message4', true, false);
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalledTimes(2);
@@ -965,7 +955,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['PATH/TO/FILE2', 'type', '--', 'message5'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
 
       expect(mockedMakeCommit).toBeCalledWith('type(file2): message5', true, false);
       expect(mockedStagePaths).toBeCalled();
@@ -987,7 +977,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['FILE1', 'type', '-f', 'message6'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(file1): message6', true, false);
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalledTimes(2);
@@ -1006,9 +996,7 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2' })
       );
 
-      await expect(
-        runProgram(['PATH', 'type', '-f', 'message7'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['PATH', 'type', '-f', 'message7'])).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith(
         'type(path/to/file2): message7',
         true,
@@ -1033,7 +1021,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['PATH/TO/FILE2', 'type', '-f', 'message8'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
 
       expect(mockedMakeCommit).toBeCalledWith(
         'type(path/to/file2): message8',
@@ -1059,7 +1047,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['FILE1.JsOn', 'type', '-r', 'message6'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(file1): message6', true, false);
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalledTimes(2);
@@ -1078,9 +1066,7 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'PATH/TO/FILE2.JsOn' })
       );
 
-      await expect(
-        runProgram(['PATH', 'type', '-r', 'message7'])
-      ).resolves.not.toBeUndefined();
+      await expect(runProgram(['PATH', 'type', '-r', 'message7'])).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith('type(path): message7', true, false);
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalledTimes(2);
@@ -1101,7 +1087,7 @@ describe('::configureProgram', () => {
 
       await expect(
         runProgram(['PATH/TO/FILE2.JsOn', 'type', '-r', 'message8'])
-      ).resolves.not.toBeUndefined();
+      ).resolves.toBeDefined();
 
       expect(mockedMakeCommit).toBeCalledWith('type(path): message8', true, false);
       expect(mockedStagePaths).toBeCalled();
@@ -1109,6 +1095,7 @@ describe('::configureProgram', () => {
     });
   });
 
+  // eslint-disable-next-line jest/require-hook
   fixtures.forEach((test, ndx) => {
     const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
       '(none)'
@@ -1191,7 +1178,7 @@ describe('::configureProgram', () => {
 
           test.preStagedPaths.forEach((file) => mockStagedPaths.add(file));
 
-          await expect(runProgram(test.programArgs)).resolves.not.toBeUndefined();
+          await expect(runProgram(test.programArgs)).resolves.toBeDefined();
 
           if (
             test.passedPaths.length &&

@@ -1181,6 +1181,7 @@ it('readme --scope-full and --scope-root examples work', async () => {
   });
 });
 
+// eslint-disable-next-line jest/require-hook
 fixtures.forEach((test) => {
   const [argName] = Object.entries(test.commitArgs).find(([_, v]) => Boolean(v)) || [
     '(none)'

@@ -183,7 +183,7 @@ describe('::getStagedPaths', () => {
       files: stagedPathData.map((p) => p[1])
     } as unknown as Response<StatusResult>);
 
-    expect(await lib.getStagedPaths()).toStrictEqual(
+    await expect(lib.getStagedPaths()).resolves.toStrictEqual(
       stagedPathData.flatMap((p) => (['?', ' '].includes(p[1].index) ? [] : p[0]))
     );
     expect(mockedStatus).toHaveBeenCalled();
@@ -208,7 +208,7 @@ describe('::fullname', () => {
         } as unknown as ExecaChildProcess<Buffer>)
     );
 
-    expect(await lib.fullname('non/ambiguous/dir/path')).toStrictEqual({
+    await expect(lib.fullname('non/ambiguous/dir/path')).resolves.toStrictEqual({
       ambiguous: false,
       file: 'non/ambiguous/dir/path/to/files/file1.js'
     });
@@ -229,7 +229,9 @@ describe('::fullname', () => {
         } as unknown as ExecaChildProcess<Buffer>)
     );
 
-    expect(await lib.fullname('non/ambiguous/dir/path/to/files/file1.js')).toStrictEqual({
+    await expect(
+      lib.fullname('non/ambiguous/dir/path/to/files/file1.js')
+    ).resolves.toStrictEqual({
       ambiguous: false,
       file: 'non/ambiguous/dir/path/to/files/file1.js'
     });
@@ -261,7 +263,7 @@ describe('::fullname', () => {
         } as unknown as ExecaChildProcess<Buffer>)
     );
 
-    expect(await lib.fullname('ambiguous/dir/path')).toStrictEqual({
+    await expect(lib.fullname('ambiguous/dir/path')).resolves.toStrictEqual({
       ambiguous: true,
       files: [
         'ambiguous/dir/path/to/files/file1.js',

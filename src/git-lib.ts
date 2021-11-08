@@ -77,9 +77,9 @@ export async function makeCommit(
  * an array of files is returned.
  *
  * Note that this function expects all relevant paths to be tracked by git. If
- * `path` (or related files) are untracked, the result of this function is
- * undefined. In short: call `stagePaths(paths)` before calling
- * `fullname(paths[0])`.
+ * `path` (or related files) are untracked, this function will either throw or
+ * return something unexpected. In short: usually it's best to call
+ * `stagePaths(paths)` before calling `fullname(paths[0])`.
  */
 export async function fullname(path: string): Promise<FullnameResult> {
   const stdout = (

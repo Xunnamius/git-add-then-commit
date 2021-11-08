@@ -7,6 +7,7 @@ const CLI_PATH = '../src/cli';
 
 jest.mock('../src/index');
 
+// eslint-disable-next-line jest/require-hook
 let mockSilent = false;
 
 const protectedImport = protectedImportFactory(CLI_PATH);

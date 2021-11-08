@@ -16,6 +16,7 @@ const pkgMainPath = `${__dirname}/../${pkgMain}`;
 const debug = debugFactory(`${pkgName}:${TEST_IDENTIFIER}`);
 const webpackVersion = process.env.MATRIX_WEBPACK_VERSION || 'latest';
 
+// eslint-disable-next-line jest/require-hook
 debug(`webpackVersion: "${webpackVersion}"`);
 
 enum SourceType {
