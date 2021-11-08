@@ -235,6 +235,76 @@ describe('::configureProgram', () => {
     });
   });
 
+  it('colon works as monorepo pathspec shortcut', async () => {
+    expect.hasAssertions();
+
+    mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
+    );
+
+    await withMocks(async () => {
+      await expect(
+        runProgram(['::pkg-1', 'type', '--', 'message'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(file.js): message', true, false);
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#2'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/index.ts' })
+      );
+
+      await expect(
+        runProgram(['::pkg-1/src/index.ts', 'type', '---', 'message'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith(
+        'type(packages/pkg-1): message',
+        true,
+        false
+      );
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#3'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/index.ts' })
+      );
+
+      await expect(
+        runProgram(['packages/pkg-1/src/index.ts', 'type', '---', 'message'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith(
+        'type(packages/pkg-1): message',
+        true,
+        false
+      );
+    });
+  });
+
+  it('"external-scripts/..." is committed as "externals" when using --scope-root', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'external-scripts/script.ts' })
+      );
+
+      await expect(
+        runProgram(['external-scripts/script.ts', 'type', '---', 'message'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message', true, false);
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'external-scripts/script-a/index.ts' })
+      );
+
+      await expect(
+        runProgram(['../../external-scripts/script-a/index.ts', 'type', '---', 'message'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message', true, false);
+    });
+  });
+
   it('exclamation-colon used when breaking change text encountered in commit message', async () => {
     expect.hasAssertions();
 

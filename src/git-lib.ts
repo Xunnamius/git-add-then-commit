@@ -114,3 +114,10 @@ export function commonAncestor(paths: string[]): string | null {
 export async function isGitRepo(): Promise<boolean> {
   return git().checkIsRepo();
 }
+
+/**
+ * Returns the absolute path of the root directory
+ */
+export async function getGitRepoRoot() {
+  return execa('git', ['rev-parse', '--show-toplevel']).then((r) => r.stdout);
+}

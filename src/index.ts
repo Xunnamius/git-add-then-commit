@@ -9,7 +9,8 @@ import {
   stagePaths,
   fullname,
   isGitRepo,
-  commonAncestor
+  commonAncestor,
+  getGitRepoRoot
 } from './git-lib';
 
 import type { Arguments, Argv } from 'yargs';
@@ -183,16 +184,23 @@ export function configureProgram(program?: Program): Context {
         throw new Error('must stage a file or pass a path. See --help for details');
 
       const params = Array.from(finalArgv._).map(String);
-      const passedPaths = params.splice(0, params.length - (shouldDeriveScope ? 2 : 3));
+      let passedPaths = params.splice(0, params.length - (shouldDeriveScope ? 2 : 3));
       const [commitType, commitScope, commitMessage] = shouldDeriveScope
         ? // eslint-disable-next-line no-sparse-arrays
           [params[0], , params[1]]
         : params;
 
+      const repoRootDir = await getGitRepoRoot();
       const computedCommitType = commitType.toLowerCase();
-
       let message = `${computedCommitType}(${commitScope}): ${commitMessage}`;
+
+      debug(`repo root dir: ${repoRootDir}`);
       debug(`initial message: ${message}`);
+
+      // ? Resolve monorepo pathspec shortcuts (::)
+      passedPaths = passedPaths.map((path) => {
+        return path.startsWith('::') ? `${repoRootDir}/packages/${path.slice(2)}` : path;
+      });
 
       if (preStagedPaths.length) {
         if (!finalArgv.force) {
@@ -294,26 +302,34 @@ export function configureProgram(program?: Program): Context {
 
             computedScope = computedScope.toLowerCase();
 
-            const splitScope = computedScope.split('/').filter(Boolean);
-
             if (finalArgv.scopeRoot) {
-              computedScope = splitScope[0];
+              const splitScope = computedScope.split('/').filter(Boolean);
 
-              // ? splitScope[0] is a first directory
-              if (splitScope[1]) {
-                if (splitScope[0] == computedCommitType) {
-                  // ? splitScope[1] is a second directory
-                  if (splitScope[2]) computedScope = splitScope[1];
-                  // ? splitScope[1] is a file name
-                  else {
-                    computedScope = removeExtensions(splitScope[1]);
-                    if (computedScope == 'index') computedScope = '';
+              if (computedScope.startsWith('packages/') && splitScope.length > 2) {
+                computedScope = `packages/${splitScope[1]}`;
+              } else {
+                if (computedScope.startsWith('external-scripts')) {
+                  splitScope[0] = 'externals';
+                }
+
+                computedScope = splitScope[0];
+
+                // ? splitScope[0] is a first directory
+                if (splitScope[1]) {
+                  if (splitScope[0] == computedCommitType) {
+                    // ? splitScope[1] is a second directory
+                    if (splitScope[2]) computedScope = splitScope[1];
+                    // ? splitScope[1] is a file name
+                    else {
+                      computedScope = removeExtensions(splitScope[1]);
+                      if (computedScope == 'index') computedScope = '';
+                    }
                   }
                 }
-              }
-              // ? else: splitScope[0] is a file name
+                // ? else: splitScope[0] is a file name
 
-              computedScope = removeExtensions(computedScope);
+                computedScope = removeExtensions(computedScope);
+              }
             }
 
             if (computedScope == computedCommitType) computedScope = '';

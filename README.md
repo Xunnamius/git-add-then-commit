@@ -370,7 +370,7 @@ git add external-scripts/my-script.ts
 git commit -m 'build(externals/my-script): update my-script functionality'
 ```
 
-### Monorepo Pathspec
+### Monorepo Pseudo-Pathspecs
 
 Given the following filesystem structure:
 
@@ -388,7 +388,7 @@ Given the following filesystem structure:
     │           └── index.ts <MODIFIED>
     └── README.md
 
-The following are equivalent (`::` is similar to a [pathspec][16]):
+The following are equivalent (`::` is a so-called "pseudo-[pathspec][16]"):
 
 ```bash
 gac ::pkg-2 style --- 'cosmetic changes'

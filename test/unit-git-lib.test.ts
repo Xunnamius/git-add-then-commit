@@ -174,6 +174,21 @@ describe('::isGitRepo', () => {
   });
 });
 
+describe('::getGitRepoRoot', () => {
+  it('checks is repo', async () => {
+    expect.hasAssertions();
+
+    mockedExeca.mockImplementationOnce(
+      () =>
+        Promise.resolve({ stdout: '/path/to/root' }) as unknown as ReturnType<
+          typeof mockedExeca
+        >
+    );
+
+    await expect(lib.getGitRepoRoot()).resolves.toBe('/path/to/root');
+  });
+});
+
 describe('::getStagedPaths', () => {
   it('returns staged paths', async () => {
     expect.hasAssertions();
