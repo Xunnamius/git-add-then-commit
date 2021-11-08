@@ -48,26 +48,21 @@ export async function stagePaths(paths: string[]): Promise<void> {
 export async function makeCommit(
   message: string,
   pipeOutput = true,
-  noVerify = false
+  noVerify: boolean | 'simple' = false
 ): Promise<void> {
   debug(`makeCommit: pipe output: ${pipeOutput}`);
   debug(`makeCommit: no-verify: ${noVerify}`);
   debug('makeCommit: creating commit with message: %O', message);
 
-  const extraOpts: TaskOptions = noVerify ? ['--no-verify'] : [];
+  const extraOpts: TaskOptions = noVerify === true ? ['--no-verify'] : [];
 
-  if (pipeOutput) {
-    // ? We use git directly here so we can inherit stdio for term color support
-    await execa('git', ['commit', '-m', message, ...extraOpts], {
-      stdio: 'inherit'
-    }).catch(() => {
-      throw new Error('commit operation failed');
-    });
-  } else {
-    if (!(await git().commit(message, extraOpts)).commit) {
-      throw new Error('silent commit operation failed');
-    }
-  }
+  // ? We use git directly here so we can inherit stdio for term color support
+  await execa('git', ['commit', '-m', message, ...extraOpts], {
+    ...(pipeOutput ? { stdio: 'inherit' } : { stdio: 'pipe' }),
+    ...(noVerify === 'simple' ? { env: { GAC_VERIFY_SIMPLE: 'true' } } : {})
+  }).catch(() => {
+    throw new Error(`${pipeOutput ? '' : 'silent '}commit operation failed`);
+  });
 }
 
 /**

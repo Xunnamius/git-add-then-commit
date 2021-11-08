@@ -94,8 +94,11 @@ export function configureProgram(program?: Program): Context {
         type: 'boolean'
       },
       verify: {
-        describe: 'Use --no-verify to bypass git pre-commit and commit-msg hooks',
-        type: 'boolean',
+        alias: 'v',
+        describe:
+          'Use --no-verify or -v false to bypass git pre-commit and commit-msg hooks',
+        type: 'string',
+        choices: ['true', 'false', 'simple'],
         default: 'true'
       }
     })
@@ -104,7 +107,7 @@ export function configureProgram(program?: Program): Context {
       ['scope-omit', 'scope-basename', 'scope-as-is', 'scope-full', 'scope-root'],
       'Scope options:'
     )
-    .group(['help', 'version', 'silent', 'verify'], 'Other options:')
+    .group(['help', 'version', 'silent', 'force', 'verify'], 'Other options:')
     .epilogue('See the full documentation for more details: https://bit.ly/3AdNSAU')
     .example([
       [
@@ -138,7 +141,15 @@ export function configureProgram(program?: Program): Context {
     program: finalProgram,
     parse: async (argv?: string[]) => {
       argv = (argv?.length ? argv : process.argv.slice(2)).map((a) =>
-        a == '-' ? '-o' : a == '--' ? '-b' : a == '---' ? '-r' : a
+        a == '-'
+          ? '-o'
+          : a == '--'
+          ? '-b'
+          : a == '---'
+          ? '-r'
+          : a == '--no-verify'
+          ? '-v=false'
+          : a
       );
 
       debug('saw argv: %O', argv);
@@ -329,7 +340,14 @@ export function configureProgram(program?: Program): Context {
           message.slice(message.indexOf(':'));
       }
 
-      await makeCommit(message, !finalArgv.silent, !finalArgv.verify);
+      await makeCommit(
+        message,
+        !finalArgv.silent,
+        finalArgv.verify === 'simple'
+          ? 'simple'
+          : finalArgv.verify === 'false' || !!finalArgv.noVerify
+      );
+
       return finalArgv;
     }
   };

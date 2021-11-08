@@ -85,10 +85,23 @@ describe('::makeCommit', () => {
     });
   });
 
-  it('makes simple-git-based commit when called with pipeOutput=false', async () => {
+  it('makes silent commit when called with pipeOutput=false', async () => {
     expect.hasAssertions();
-    await lib.makeCommit('type(scope): message', false);
-    expect(mockedCommit).toBeCalledWith('type(scope): message', []);
+
+    mockedExeca.mockImplementationOnce(
+      () => Promise.resolve() as unknown as ReturnType<typeof mockedExeca>
+    );
+
+    mockedExeca.mockImplementationOnce(
+      () => Promise.reject() as unknown as ReturnType<typeof mockedExeca>
+    );
+
+    await expect(lib.makeCommit('type(scope): message', false)).toResolve();
+    expect(mockedExeca).toBeCalledWith('git', ['commit', '-m', 'type(scope): message'], {
+      stdio: 'pipe'
+    });
+
+    await expect(lib.makeCommit('type(scope): message', false)).toReject();
   });
 
   it('makes unverified commit when noVerify=true', async () => {
@@ -98,8 +111,18 @@ describe('::makeCommit', () => {
       () => Promise.resolve() as unknown as ReturnType<typeof mockedExeca>
     );
 
+    mockedExeca.mockImplementationOnce(
+      () => Promise.resolve() as unknown as ReturnType<typeof mockedExeca>
+    );
+
     await lib.makeCommit('type(scope): message', false, true);
-    expect(mockedCommit).toBeCalledWith('type(scope): message', ['--no-verify']);
+    expect(mockedExeca).toBeCalledWith(
+      'git',
+      ['commit', '-m', 'type(scope): message', '--no-verify'],
+      {
+        stdio: 'pipe'
+      }
+    );
 
     await lib.makeCommit('type(scope): message', true, true);
     expect(mockedExeca).toBeCalledWith(
@@ -127,18 +150,19 @@ describe('::makeCommit', () => {
     });
   });
 
-  it('rejects if simple-git-based commit operation fails', async () => {
+  it('uses simple verification when --verify=simple encountered', async () => {
     expect.hasAssertions();
 
-    const oldCommit = mockCommitResult.commit;
-    mockCommitResult.commit = '';
+    mockedExeca.mockImplementationOnce(
+      () => Promise.resolve() as unknown as ReturnType<typeof mockedExeca>
+    );
 
-    await expect(lib.makeCommit('type(scope): message', false)).rejects.toMatchObject({
-      message: 'silent commit operation failed'
+    await expect(lib.makeCommit('type(scope): message', true, 'simple')).toResolve();
+
+    expect(mockedExeca).toBeCalledWith('git', ['commit', '-m', 'type(scope): message'], {
+      stdio: 'inherit',
+      env: { GAC_VERIFY_SIMPLE: 'true' }
     });
-
-    mockCommitResult.commit = oldCommit;
-    expect(mockedCommit).toBeCalledWith('type(scope): message', []);
   });
 });
 

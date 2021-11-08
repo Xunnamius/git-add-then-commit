@@ -182,6 +182,59 @@ describe('::configureProgram', () => {
     });
   });
 
+  it('uses simple verification when --verify=simple encountered', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      await expect(
+        runProgram(['file', 'type', '-', 'message', '--verify=simple'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, 'simple');
+    });
+  });
+
+  it('-v simple is equivalent to --verify=simple', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      await expect(
+        runProgram(['file', 'type', '-', 'message', '-v', 'simple'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, 'simple');
+    });
+  });
+
+  it('skips verification when --verify=false encountered', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      await expect(
+        runProgram(['file', 'type', '-', 'message', '--verify=false'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, true);
+    });
+  });
+
+  it('does not skip verification when --verify=true encountered', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      await expect(
+        runProgram(['file', 'type', '-', 'message', '--verify=true'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+    });
+  });
+
+  it('does not skip verification when no verification flags encountered', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      await expect(runProgram(['file', 'type', '-', 'message'])).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+    });
+  });
+
   it('exclamation-colon used when breaking change text encountered in commit message', async () => {
     expect.hasAssertions();
 
