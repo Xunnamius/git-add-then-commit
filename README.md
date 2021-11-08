@@ -30,45 +30,11 @@ commits][10] quickly and easily.
 npm install --global git-add-then-commit
 ```
 
-<details><summary><strong>[additional details]</strong></summary>
-
-> Note: **you probably don't need to read through this!** This information is
-> primarily useful for those attempting to bundle this package or for people who
-> have an opinion on ESM versus CJS.
-
-This is a [dual CJS2/ES module][dual-module] package. That means this package
-exposes both CJS2 and ESM entry points.
-
-Loading this package via `require(...)` will cause Node and Webpack to use the
-[CJS2 bundle][cjs2] entry point, disable [tree shaking][tree-shaking] in Webpack
-4, and lead to larger bundles in Webpack 5. Alternatively, loading this package
-via `import { ... } from ...` or `import(...)` will cause Node to use the ESM
-entry point in [versions that support it][node-esm-support], as will Webpack.
-Using the `import` syntax is the modern, preferred choice.
-
-For backwards compatibility with Webpack 4 (_compat with Webpack 4 is not
-guaranteed!_) and Node versions < 14, [`package.json`][package-json] retains the
-[`module`][module-key] key, which points to the ESM entry point, and the
-[`main`][exports-main-key] key, which points to the CJS2 entry point explicitly
-(using the .js file extension). For Webpack 5 and Node versions >= 14,
-[`package.json`][package-json] includes the [`exports`][exports-main-key] key,
-which points to both entry points explicitly.
-
-Though [`package.json`][package-json] includes
-[`{ "type": "commonjs"}`][local-pkg], note that the ESM entry points are ES
-module (`.mjs`) files. [`package.json`][package-json] also includes the
-[`sideEffects`][side-effects-key] key, which is `false` for [optimal tree
-shaking][tree-shaking], and the `types` key, which points to a TypeScript
-declarations file.
-
-Additionally, this package does not maintain shared state and so does not
-exhibit the [dual package hazard][hazard].
-
-</details>
-
 ## Usage
 
-    gac [path1, path2, ...] commit-type commit-scope commit-message
+```bash
+gac [path1, path2, ...] commit-type commit-scope commit-message
+```
 
 > You can use `--help` to get help text output, `--version` to get the current
 > version, and `--silent` to prevent all output.
@@ -301,6 +267,8 @@ Given the following filesystem structure:
     ├── docs
     │   ├── supplementary.md <MODIFIED>
     │   └── README.md <MODIFIED>
+    ├── external-scripts
+    │   └── my-script.ts <MODIFIED>
     ├── index.ts <MODIFIED>
     ├── lib
     │   ├── api
@@ -308,8 +276,8 @@ Given the following filesystem structure:
     │   ├── index.ts <MODIFIED>
     │   ├── cli.ts <MODIFIED>
     │   └── git.ts
-    ├── package.json <MODIFIED>
     ├── package-lock.json <MODIFIED>
+    ├── package.json <MODIFIED>
     ├── README.md
     └── test
         ├── index.ts <MODIFIED>
@@ -395,12 +363,68 @@ git add CHANGELOG.md
 git commit -m 'docs(changelog): regenerate'
 ```
 
+```bash
+gac external-scripts/my-script.ts build --- 'update my-script functionality'
+
+git add external-scripts/my-script.ts
+git commit -m 'build(externals/my-script): update my-script functionality'
+```
+
+### Monorepo Pathspec
+
+Given the following filesystem structure:
+
+    .
+    ├── CHANGELOG.md
+    ├── CONTRIBUTING.md
+    ├── package-lock.json
+    ├── package.json
+    ├── packages
+    │   ├── pkg-1
+    │   │   └── specific
+    │   │       └── script.ts <MODIFIED>
+    │   └── pkg-2
+    │       └── src
+    │           └── index.ts <MODIFIED>
+    └── README.md
+
+The following are equivalent (`::` is similar to a [pathspec][16]):
+
+```bash
+gac ::pkg-2 style --- 'cosmetic changes'
+
+git add packages/pkg-2/src/index.ts
+git commit -m 'style(packages/pkg-2): cosmetic changes'
+```
+
+```bash
+gac ::pkg-1/specific/script.ts feat --- 'added something specific to a script'
+
+git add packages/pkg-1/specific/script.ts
+git commit -m 'feat(packages/pkg-1): added something specific to a script'
+```
+
+```bash
+cd packages/pkg-2
+gac ::pkg-1 feat --- 'added something specific to a script'
+
+git add ../../packages/pkg-1/specific/script.ts
+git commit -m 'feat(packages/pkg-1): added something specific to a script'
+```
+
 ### Other Features
 
 - Use `--help` for more usage information, including listing all aliases.
+
 - Use `--no-verify` to perform an [unverified commit][8].
+
+- Use `--verify=simple` to set `GAC_VERIFY_SIMPLE=true` in the runtime
+  environment, which can be used to skip certain tests based on the presence of
+  the variable.
+
 - If `commit-message` describes a [breaking change][9], [an exclamation point is
   prepended to the colon][11] in the final commit message.
+
 - `gac` works with both currently staged files and any paths passed as arguments
   with the latter having precedence. This makes it easy to, for instance, stage
   files with [vscode][13] or [`git add -p`][14] then use `gac` to quickly
@@ -423,7 +447,35 @@ await parse(['path', 'type', '--no-scope', 'commit message here']);
 
 ## Documentation
 
-Further documentation can be found under [`docs/`][docs].
+> Further documentation can be found under [`docs/`][docs].
+
+This is a [dual CJS2/ES module][dual-module] package. That means this package
+exposes both CJS2 and ESM entry points.
+
+Loading this package via `require(...)` will cause Node and Webpack to use the
+[CJS2 bundle][cjs2] entry point, disable [tree shaking][tree-shaking] in Webpack
+4, and lead to larger bundles in Webpack 5. Alternatively, loading this package
+via `import { ... } from ...` or `import(...)` will cause Node to use the ESM
+entry point in [versions that support it][node-esm-support], as will Webpack.
+Using the `import` syntax is the modern, preferred choice.
+
+For backwards compatibility with Webpack 4 (_compat with Webpack 4 is not
+guaranteed!_) and Node versions < 14, [`package.json`][package-json] retains the
+[`module`][module-key] key, which points to the ESM entry point, and the
+[`main`][exports-main-key] key, which points to the CJS2 entry point explicitly
+(using the .js file extension). For Webpack 5 and Node versions >= 14,
+[`package.json`][package-json] includes the [`exports`][exports-main-key] key,
+which points to both entry points explicitly.
+
+Though [`package.json`][package-json] includes
+[`{ "type": "commonjs"}`][local-pkg], note that the ESM entry points are ES
+module (`.mjs`) files. [`package.json`][package-json] also includes the
+[`sideEffects`][side-effects-key] key, which is `false` for [optimal tree
+shaking][tree-shaking], and the `types` key, which points to a TypeScript
+declarations file.
+
+Additionally, this package does not maintain shared state and so does not
+exhibit the [dual package hazard][hazard].
 
 ### License
 
@@ -528,3 +580,5 @@ information.
   https://git-scm.com/book/en/v2/Git-Tools-Interactive-Staging#_staging_patches
 [15]:
   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split
+[16]:
+  https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
