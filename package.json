@@ -152,9 +152,6 @@
   "engines": {
     "node": ">=12.x"
   },
-  "os": [
-    "!win32"
-  ],
   "publishConfig": {
     "access": "public"
   }
