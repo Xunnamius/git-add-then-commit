@@ -31,7 +31,7 @@
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/bundle/index.mjs",
   "types": "./dist/types/src/index.d.ts",
   "bin": {
     "gac": "./dist/cli.js",
