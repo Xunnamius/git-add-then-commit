@@ -8,7 +8,7 @@ const pkgName = require('./package.json').name;
 const debug = require('debug')(`${pkgName}:babel-config`);
 const { determineModuleTypes } = require('webpack-node-module-types/sync');
 
-// ? Fix relative local imports referencing package.json (.dist/esm/...)
+// ? Fix relative local imports referencing package.json (.dist/bundle/...)
 const transformRenameImport = [
   'transform-rename-import',
   {
@@ -16,6 +16,8 @@ const transformRenameImport = [
     replacements: [{ original: 'package', replacement: `${pkgName}/package.json` }]
   }
 ];
+
+debug('NODE_ENV: %O', process.env.NODE_ENV);
 
 module.exports = {
   parserOpts: { strictMode: true },
@@ -77,8 +79,23 @@ module.exports = {
       ],
       plugins: [transformRenameImport]
     },
-    // * Used for compiling ESM code output somewhere in ./dist
+    // * Used for compiling ESM code output in ./dist/esm
     esm: {
+      presets: [
+        [
+          '@babel/preset-env',
+          {
+            // ? https://babeljs.io/docs/en/babel-preset-env#modules
+            modules: false,
+            targets: NODE_LTS
+          }
+        ],
+        ['@babel/preset-typescript', { allowDeclareFields: true }]
+        // ? Minification is handled by Webpack
+      ]
+    },
+    // * Used for compiling ESM code output in .dist/bundle
+    bundle: {
       presets: [
         [
           '@babel/preset-env',
