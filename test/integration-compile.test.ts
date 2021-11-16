@@ -10,7 +10,7 @@ import {
 
 import type { FixtureOptions } from './setup';
 
-const TEST_IDENTIFIER = 'integration-webpack';
+const TEST_IDENTIFIER = 'integration-compile';
 
 const pkgMainPath = `${__dirname}/../${pkgMain}`;
 const debug = debugFactory(`${pkgName}:${TEST_IDENTIFIER}`);
