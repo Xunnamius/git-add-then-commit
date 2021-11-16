@@ -119,12 +119,12 @@ Configure an existing Yargs instance (program) and return an argv parser.
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/a35d744/src/index.ts#L23
+  https://github.com/Xunnamius/git-add-then-commit/blob/f5ff9a7/src/index.ts#L23
 [7]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/a35d744/src/index.ts#L21
+  https://github.com/Xunnamius/git-add-then-commit/blob/f5ff9a7/src/index.ts#L21
 [8]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/a35d744/src/index.ts#L19
+  https://github.com/Xunnamius/git-add-then-commit/blob/f5ff9a7/src/index.ts#L19
 [9]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/a35d744/src/index.ts#L43
+  https://github.com/Xunnamius/git-add-then-commit/blob/f5ff9a7/src/index.ts#L43
 [10]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/a35d744/src/index.ts#L49
+  https://github.com/Xunnamius/git-add-then-commit/blob/f5ff9a7/src/index.ts#L49
