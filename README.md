@@ -564,13 +564,10 @@ information.
 [side-effects-key]:
   https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free
 [tree-shaking]: https://webpack.js.org/guides/tree-shaking
-[npm-v7-bc]:
-  https://github.blog/2020-10-13-presenting-v7-0-0-of-the-npm-cli/#user-content-breaking-changes
 [10]: https://conventionalcommits.org
 [1]: https://github.com/yargs/yargs
 [2]: #root
 [3]: #omit
-[4]: https://github.com/Xunnamius
 [5]: https://github.com/conventional-changelog/conventional-changelog
 [6]: #full
 [7]: https://dev.to/cbillowes/why-i-create-atomic-commits-in-git-kfi
