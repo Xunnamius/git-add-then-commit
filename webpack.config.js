@@ -73,7 +73,7 @@ const externals = ({ esm /*: boolean */ }) => [
 ];
 
 const libCjsConfig = {
-  name: 'lib',
+  name: 'cjs',
   mode: 'production',
   target: 'node',
   node: false,
@@ -184,7 +184,7 @@ const libEsmConfig = {
     path: `${__dirname}/external-scripts/bin`
   },
 
-  externals,
+  externals: externals({ esm: false }),
   externalsPresets: { node: true },
 
   stats: {
@@ -211,7 +211,7 @@ const libEsmConfig = {
   },
   optimization: { usedExports: true },
   plugins: [
-    ...envPlugins,
+    ...envPlugins({ esm: false }),
     // * ▼ For non-bundled externals, make entry file executable w/ shebang
     new BannerPlugin({ banner: '#!/usr/bin/env node', raw: true, entryOnly: true })
   ]
