@@ -30,10 +30,7 @@ module.exports = {
     [
       'transform-default-named-imports',
       {
-        test: [...determineModuleTypes().cjs, 'package'],
-        exclude: [
-          /* /^next([/?#].+)?/, /^mongodb([/?#].+)?/ */
-        ]
+        include: ['package']
       }
     ]
   ],
