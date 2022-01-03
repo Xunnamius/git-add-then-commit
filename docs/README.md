@@ -26,7 +26,7 @@
 
 #### Defined in
 
-node_modules/@types/yargs/index.d.ts:659
+node_modules/@types/yargs/index.d.ts:664
 
 ---
 
@@ -119,12 +119,12 @@ Configure an existing Yargs instance (program) and return an argv parser.
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/2f5a7bf/src/index.ts#L23
+  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L23
 [7]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/2f5a7bf/src/index.ts#L21
+  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L21
 [8]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/2f5a7bf/src/index.ts#L19
+  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L19
 [9]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/2f5a7bf/src/index.ts#L43
+  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L43
 [10]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/2f5a7bf/src/index.ts#L49
+  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L49
