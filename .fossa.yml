@@ -1,0 +1,6 @@
+version: 3
+project:
+  name: git-add-then-commit
+targets:
+  only:
+    - type: npm
