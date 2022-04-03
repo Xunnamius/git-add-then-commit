@@ -442,8 +442,8 @@ git commit -m 'docs(packages): add license section to all packages'
 - Use `--no-verify` to perform an [unverified commit][8].
 
 - Use `--verify=simple` to set `GAC_VERIFY_SIMPLE=true` in the runtime
-  environment, which can be used to skip certain tests based on the presence of
-  the variable.
+  environment, which can be used to skip certain [tests][18] in your [git
+  hooks][19] based on the presence of the variable.
 
 - If `commit-message` describes a [breaking change][9], [an exclamation point is
   prepended to the colon][11] in the final commit message.
@@ -603,3 +603,5 @@ information.
   https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
 [4]: #monorepo-pseudo-pathspecs
 [17]: https://github.com/Xunnamius/projector#terminology
+[18]: https://www.npmjs.com/package/lint-staged
+[19]: https://www.npmjs.com/package/husky
