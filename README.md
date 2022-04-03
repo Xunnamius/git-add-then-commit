@@ -216,18 +216,23 @@ look nicer in [generated changelogs][5]. Specifically:
 - Derived scopes are analogous to filesystem structure.
 - Derived scopes tend to be short, sweet, and mostly alphanumeric.
 
-Like [`--scope-full`][6], `--scope-root` will derive `commit-scope` by selecting
-from any path arguments and staged file paths available. Unlike
-[`--scope-full`][6], only the _first directory_ (left-to-right) in the selected
-path—rather than the deepest common ancestor—is used to derive `commit-scope`.
+Like [`--scope-full`][6], `--scope-root` will derive `commit-scope` from any
+path arguments and staged file paths available; the selection is referred to as
+the _selected path_.
 
-> For example, `path` in `path/to/some/file` is the first directory.
+Unlike [`--scope-full`][6], **only the _first directory_ (left-to-right) in the
+selected path—rather than the deepest common ancestor—is used to derive
+`commit-scope`**.
+
+> For example, `path` in selected path `path/to/some/file` is the first
+> directory.
 
 If no path arguments are passed and there is exactly one staged file,
-`--scope-root` will select the first directory from that file's path. If there
-is more than one staged file (or the first path is ambiguous) and their paths
-share the same first directory, said directory is selected; if there is no
-common first directory, the operation fails with an ambiguity error.
+`--scope-root` will use that file as the selected path. If there is more than
+one staged file (or the first path is ambiguous) and their paths share a common
+ancestor directory other than the repository root, the deepest common ancestor
+becomes the selected path; if there is no valid common ancestor, the operation
+fails with an ambiguity error.
 
 > An ambiguity error using `--scope-root` is usually a hint to construct [a more
 > fine-grain commit][7].
@@ -236,19 +241,41 @@ If the selected path has no first directory, i.e. it points to a file at the
 root of the repository, the filename is used as `commit-scope` instead with its
 file extension removed (see `package.json` in the examples below).
 
-On the other hand, if the selected path has a first directory matching
-`commit-type` (see `test` in the examples below):
+On the other hand, if the selected path has:
 
-- If there is a _second directory_ in the selected path, the second directory is
-  used to derive the `commit-scope` instead.
+- A first directory matching `commit-type` (see `test` in the examples below):
 
-> For example, `to` in `path/to/some/file` is the second directory.
+  - If there is a _second directory_ in the selected path, the second directory
+    is used to derive the `commit-scope` instead.
 
-- If there is no second directory, the filename (sans extension) is used to
-  derive the `commit-scope` _only if the file is not named "index"_.
+    > For example, `to` in `path/to/some/file` is the second directory.
 
-- If there is no second directory and the file _is_ named "index" (sans
-  extension), `commit-scope` is [omitted][3].
+  - If there is no second directory, the filename (sans extension) is used to
+    derive the `commit-scope` _only if the file is not named "index"_.
+
+  - If there is no second directory and the file _is_ named "index" (sans
+    extension), `commit-scope` is [omitted][3].
+
+- A first directory named "packages" (see [Monorepo Pseudo-Pathspecs][4] below):
+
+  - If there is a _second directory_ in the selected path that is a common
+    ancestor, the first _and_ second directories are used to derive the
+    `commit-scope` instead.
+
+    > For example, `packages/pkg-1` when committing `packages/pkg-1/some/file`
+    > and `packages/pkg-1/some/other/file`
+
+  - If "packages" (as the first directory) is the deepest common ancestor in the
+    selected path—i.e. it's a commit spanning multiple monorepo packages—only
+    the first directory is used to derive the `commit-scope`, which is the
+    normal behavior.
+
+    > For example, `packages` when committing `packages/pkg-1/some/file` and
+    > `packages/pkg-TWO/some/file`
+
+- A first directory with a name beginning with "external":
+
+  - `commit-scope` becomes "externals".
 
 At the end of the process, if it has not already been omitted, `commit-scope` is
 lowercased and [split][15] on `"."` with the first element used as the final
@@ -268,9 +295,10 @@ Given the following filesystem structure:
     ├── external-scripts
     │   └── my-script.ts <MODIFIED>
     ├── index.ts <MODIFIED>
+    ├── identity.trifold.ts <MODIFIED>
     ├── lib
     │   ├── api
-    │   │   └── adapter.ts <MODIFIED>
+    │   │   └── adapter.trifold.ts <MODIFIED>
     │   ├── index.ts <MODIFIED>
     │   ├── cli.ts <MODIFIED>
     │   └── git.ts
@@ -288,6 +316,13 @@ Given the following filesystem structure:
 The following are equivalent:
 
 ```bash
+gac identity.trifold.ts feat --- 'added identity trifold subroutine'
+
+git add identity.trifold.ts
+git commit -m 'feat(identity): added identity trifold subroutine'
+```
+
+```bash
 gac lib/index.ts fix --- 'fix bug that caused crash'
 
 git add lib/index.ts
@@ -295,10 +330,10 @@ git commit -m 'fix(lib): fix bug that caused crash'
 ```
 
 ```bash
-gac lib/api refactor --- 'use updated mongodb native driver'
+gac lib/api refactor --- 'use updated mongodb trifold driver'
 
-git add lib/api/adapter.ts
-git commit -m 'refactor(lib): use updated mongodb native driver'
+git add lib/api/adapter.trifold.ts
+git commit -m 'refactor(lib): use updated mongodb trifold driver'
 ```
 
 ```bash
