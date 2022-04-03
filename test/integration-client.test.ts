@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-in-test */
 /* eslint-disable jest/no-conditional-expect */
 import { name as pkgName, bin as pkgBin } from 'package';
 import { promises as fs } from 'fs';

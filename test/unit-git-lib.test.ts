@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-in-test */
 import { asMockedFunction } from './setup';
 import * as lib from '../src/git-lib';
 import git from 'simple-git';

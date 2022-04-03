@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-in-test */
 import { configureProgram } from '../src/index';
 import { asMockedFunction, withMockedArgv, withMockedOutput } from './setup';
 import fixtures from './fixtures';
