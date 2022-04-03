@@ -100,7 +100,7 @@ export async function fullname(path: string): Promise<FullnameResult> {
 }
 
 /**
- * Find the non-root common ancestor of `paths` or return null.
+ * Find the non-root deepest common ancestor of `paths` or return null.
  */
 export function commonAncestor(paths: string[]): string | null {
   const ancestor = ancestorPath(...paths) || null;
