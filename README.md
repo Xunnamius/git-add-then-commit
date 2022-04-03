@@ -370,6 +370,10 @@ git commit -m 'build(externals/my-script): update my-script functionality'
 
 ### Monorepo Pseudo-Pathspecs
 
+Along with normal [pathspecs][16], `gac` also supports a so-called
+"pseudo-pathspec" syntax for easily referring to package \[sub-roots]\[17] in a
+monorepo.
+
 Given the following filesystem structure:
 
     .
@@ -379,18 +383,22 @@ Given the following filesystem structure:
     ├── package.json
     ├── packages
     │   ├── pkg-1
+    │   │   ├── README.md <MODIFIED>
     │   │   └── specific
     │   │       └── script.ts <MODIFIED>
     │   └── pkg-2
+    │   │   ├── README.md <MODIFIED>
     │       └── src
     │           └── index.ts <MODIFIED>
     └── README.md
 
-The following are equivalent (`::` is a so-called "pseudo-[pathspec][16]"):
+The following are pairs of equivalent commands where `::` is the pseudo-pathspec
+specifier:
 
 ```bash
 gac ::pkg-2 style --- 'cosmetic changes'
 
+git add packages/pkg-2/README.md
 git add packages/pkg-2/src/index.ts
 git commit -m 'style(packages/pkg-2): cosmetic changes'
 ```
@@ -406,8 +414,25 @@ git commit -m 'feat(packages/pkg-1): added something specific to a script'
 cd packages/pkg-2
 gac ::pkg-1 feat --- 'added something specific to a script'
 
+git add ../../packages/pkg-1/README.md
 git add ../../packages/pkg-1/specific/script.ts
 git commit -m 'feat(packages/pkg-1): added something specific to a script'
+```
+
+```bash
+cd packages/pkg-1
+gac :: refactor --- 'a non-atomic commit with a whole bunch of changes'
+
+git add ../../packages
+git commit -m 'refactor(packages): a non-atomic commit with a whole bunch of changes'
+```
+
+```bash
+gac ::*/README.md docs --- 'add license section to all packages'
+
+git add packages/pkg-1/README.md
+git add packages/pkg-2/README.md
+git commit -m 'docs(packages): add license section to all packages'
 ```
 
 ### Other Features
@@ -576,3 +601,5 @@ information.
   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split
 [16]:
   https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
+[4]: #monorepo-pseudo-pathspecs
+[17]: https://github.com/Xunnamius/projector#terminology
