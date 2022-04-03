@@ -216,9 +216,11 @@ look nicer in [generated changelogs][5]. Specifically:
 - Derived scopes are analogous to filesystem structure.
 - Derived scopes tend to be short, sweet, and mostly alphanumeric.
 
-Like [`--scope-full`][6], `--scope-root` will derive `commit-scope` from any
-path arguments and staged file paths available; the selection is referred to as
-the _selected path_.
+Like [`--scope-full`][6], `--scope-root` will derive `commit-scope` from the
+first path argument passed to `gac`.
+
+> The path used to derive the `commit-scope` is referred to below as the
+> _selected path_.
 
 Unlike [`--scope-full`][6], **only the _first directory_ (left-to-right) in the
 selected path—rather than the deepest common ancestor—is used to derive
