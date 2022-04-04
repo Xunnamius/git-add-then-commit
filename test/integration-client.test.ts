@@ -1311,7 +1311,8 @@ it('readme --scope-full and --scope-root examples work', async () => {
     await writeFile(`${root}/docs/supplementary.md`, 'file-stuff');
     await writeFile(`${root}/docs/README.md`, 'file-stuff');
     await writeFile(`${root}/index.ts`, 'file-stuff');
-    await writeFile(`${root}/lib/api/adapter.ts`, 'file-stuff');
+    await writeFile(`${root}/identity.trifold.ts`, 'file-stuff');
+    await writeFile(`${root}/lib/api/adapter.trifold.ts`, 'file-stuff');
     await writeFile(`${root}/lib/index.ts`, 'file-stuff');
     await writeFile(`${root}/lib/cli.ts`, 'file-stuff');
     await writeFile(`${root}/package.json`, 'file-stuff');
@@ -1321,18 +1322,31 @@ it('readme --scope-full and --scope-root examples work', async () => {
     await writeFile(`${root}/test/integrations/e2e-tests.ts`, 'file-stuff');
     await writeFile(`${root}/test/integrations/index.ts`, 'file-stuff');
 
+    await run(
+      CLI_BIN_PATH,
+      ['identity.trifold.ts', 'feat', '---', 'added identity trifold subroutine'],
+      {
+        cwd: root,
+        reject: true
+      }
+    );
+
+    let commit = await git.show();
+    expect(commit).toInclude('feat(identity): added identity trifold subroutine');
+    expect(commit).toInclude('a/identity.trifold.ts');
+
     await run(CLI_BIN_PATH, ['lib/index.ts', 'fix', '---', 'fix bug that caused crash'], {
       cwd: root,
       reject: true
     });
 
-    let commit = await git.show();
+    commit = await git.show();
     expect(commit).toInclude('fix(lib): fix bug that caused crash');
     expect(commit).toInclude('a/lib/index.ts');
 
     await run(
       CLI_BIN_PATH,
-      ['lib/api', 'refactor', '---', 'use updated mongodb native driver'],
+      ['lib/api', 'refactor', '---', 'use updated mongodb trifold driver'],
       {
         cwd: root,
         reject: true
@@ -1340,8 +1354,8 @@ it('readme --scope-full and --scope-root examples work', async () => {
     );
 
     commit = await git.show();
-    expect(commit).toInclude('refactor(lib): use updated mongodb native driver');
-    expect(commit).toInclude('a/lib/api/adapter.ts');
+    expect(commit).toInclude('refactor(lib): use updated mongodb trifold driver');
+    expect(commit).toInclude('a/lib/api/adapter.trifold.ts');
 
     await run(
       CLI_BIN_PATH,
