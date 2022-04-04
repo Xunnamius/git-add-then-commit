@@ -408,7 +408,7 @@ git commit -m 'build(externals/my-script): update my-script functionality'
 ### Monorepo Pseudo-Pathspecs
 
 Along with normal [pathspecs][16], `gac` also supports a so-called
-"pseudo-pathspec" syntax for easily referring to package \[sub-roots]\[17] in a
+"pseudo-pathspec" syntax for easily referring to package [sub-roots][17] in a
 monorepo.
 
 Given the following filesystem structure:
