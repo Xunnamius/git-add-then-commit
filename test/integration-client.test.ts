@@ -902,6 +902,112 @@ it('resolves monorepo pseudo-pathspec paths properly', async () => {
   });
 });
 
+it('resolves wildcard monorepo pseudo-pathspec paths properly', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run('mkdir', ['fake'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-1/src'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-2/src'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-3/src'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-1/src/path'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-2/src/index.js'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-3/src/index.ts'], { cwd: root, reject: true });
+
+    await run(CLI_BIN_PATH, ['::pkg-1/**/*', 'fix', '-f', 'somewhat complex add'], {
+      cwd: `${root}/fake`,
+      reject: true
+    });
+
+    let commit = await git.show();
+    expect(commit).toInclude('fix(packages/pkg-1/src/path): somewhat complex add');
+    expect(commit).toInclude('a/packages/pkg-1/src/path');
+    expect(commit).not.toInclude('a/packages/pkg-2/src/index.js');
+    expect(commit).not.toInclude('a/packages/pkg-3/src/index.ts');
+    expect(commit).not.toInclude('a/file1.json');
+
+    await run(
+      CLI_BIN_PATH,
+      ['::*/index.*', 'fix', '---', 'another somewhat complex add'],
+      {
+        cwd: `${root}/fake`,
+        reject: true
+      }
+    );
+
+    commit = await git.show();
+    expect(commit).toInclude('fix(packages): another somewhat complex add');
+    expect(commit).toInclude('a/packages/pkg-2/src/index.js');
+    expect(commit).toInclude('a/packages/pkg-3/src/index.ts');
+    expect(commit).not.toInclude('a/file1.json');
+  });
+});
+
+it('resolves multiple monorepo pseudo-pathspec paths properly', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run('mkdir', ['fake'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-1/src'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-2/src'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-3/src'], { cwd: root, reject: true });
+    await run('touch', ['fake/.gitkeep'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-1/src/path'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-2/src/index.js'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-3/src/index.ts'], { cwd: root, reject: true });
+
+    await run(
+      CLI_BIN_PATH,
+      ['::pkg-1', '::pkg-2', '::pkg-3', 'fix', '---', 'somewhat complex add 1'],
+      {
+        cwd: `${root}/fake`,
+        reject: true
+      }
+    );
+
+    const commit = await git.show();
+    expect(commit).toInclude('fix(packages/pkg-1): somewhat complex add 1');
+    expect(commit).toInclude('a/packages/pkg-1/src/path');
+    expect(commit).toInclude('a/packages/pkg-2/src/index.js');
+    expect(commit).toInclude('a/packages/pkg-3/src/index.ts');
+    expect(commit).not.toInclude('a/file1.json');
+  });
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run('mkdir', ['fake'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-1/src'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-2/src'], { cwd: root, reject: true });
+    await run('mkdir', ['-p', 'packages/pkg-3/src'], { cwd: root, reject: true });
+    await run('touch', ['fake/.gitkeep'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-1/src/path'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-2/src/index.js'], { cwd: root, reject: true });
+    await run('touch', ['packages/pkg-3/src/index.ts'], { cwd: root, reject: true });
+
+    await run(
+      CLI_BIN_PATH,
+      ['::', '::pkg-1', '.gitkeep', 'fix', '---', 'somewhat complex add 2'],
+      {
+        cwd: `${root}/fake`,
+        reject: true
+      }
+    );
+
+    const commit = await git.show();
+    expect(commit).toInclude('fix(packages): somewhat complex add 2');
+    expect(commit).toInclude('a/fake/.gitkeep');
+    expect(commit).toInclude('a/packages/pkg-1/src/path');
+    expect(commit).toInclude('a/packages/pkg-2/src/index.js');
+    expect(commit).toInclude('a/packages/pkg-3/src/index.ts');
+    expect(commit).not.toInclude('a/file1.json');
+  });
+});
+
 it('still works when cwd is repo subdir', async () => {
   expect.hasAssertions();
 
