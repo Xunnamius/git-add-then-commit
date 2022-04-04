@@ -305,10 +305,10 @@ export function configureProgram(program?: Program): Context {
             if (finalArgv.scopeRoot) {
               const splitScope = computedScope.split('/').filter(Boolean);
 
-              if (computedScope.startsWith('packages/') && splitScope.length > 2) {
+              if (splitScope[0] == 'packages' && splitScope.length >= 2) {
                 computedScope = `packages/${splitScope[1]}`;
               } else {
-                if (computedScope.startsWith('external-scripts')) {
+                if (splitScope[0].startsWith('external')) {
                   splitScope[0] = 'externals';
                 }
 
