@@ -326,8 +326,7 @@ export function configureProgram(program?: Program): Context {
                     }
                   }
                 }
-                // ? else: splitScope[0] is a file name
-
+                // ? else: splitScope[0] could be a filename and/or include dots
                 computedScope = removeExtensions(computedScope);
               }
             }
