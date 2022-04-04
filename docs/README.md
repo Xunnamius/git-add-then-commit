@@ -15,7 +15,7 @@
 
 ### Arguments
 
-Ƭ **Arguments**<`T`>: `T` & { \[argName: string]: `unknown`; `$0`: `string` ;
+Ƭ **Arguments**<`T`>: `T` & { `[argName: string]`: `unknown`; `$0`: `string` ;
 `_`: (`string` | `number`)\[] }
 
 #### Type parameters
@@ -119,12 +119,12 @@ Configure an existing Yargs instance (program) and return an argv parser.
 [4]: README.md#program
 [5]: README.md#configureprogram
 [6]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L23
+  https://github.com/Xunnamius/git-add-then-commit/blob/f1d28e5/src/index.ts#L23
 [7]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L21
+  https://github.com/Xunnamius/git-add-then-commit/blob/f1d28e5/src/index.ts#L21
 [8]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L19
+  https://github.com/Xunnamius/git-add-then-commit/blob/f1d28e5/src/index.ts#L19
 [9]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L43
+  https://github.com/Xunnamius/git-add-then-commit/blob/f1d28e5/src/index.ts#L43
 [10]:
-  https://github.com/Xunnamius/git-add-then-commit/blob/821ec2b/src/index.ts#L49
+  https://github.com/Xunnamius/git-add-then-commit/blob/f1d28e5/src/index.ts#L49
