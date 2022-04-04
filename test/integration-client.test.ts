@@ -845,6 +845,86 @@ it('both staged and non-staged paths are added and committed properly', async ()
   });
 });
 
+it('"packages/package-name/..." paths are committed with commit scope "packages/package-name" when using --scope-root', async () => {
+  expect.hasAssertions();
+
+  await withMockedFixture(async ({ root, git }) => {
+    if (!git) throw new Error('must use git-repository fixture');
+
+    await run(
+      'mkdir',
+      [
+        '-p',
+        'packages/pkg-1',
+        'packages/pkg-2/script-a',
+        'packages/pkg-3/script-b',
+        'packages/pkg-4/script-c',
+        'packages/pkg-5/script-d'
+      ],
+      { cwd: root, reject: true }
+    );
+
+    await run(
+      'touch',
+      [
+        'packages/pkg-1/script.js',
+        'packages/pkg-2/script-a/script.js',
+        'packages/pkg-3/script-b/script.js',
+        'packages/pkg-4/script-c/script.js',
+        'packages/pkg-5/script-d/script1.js',
+        'packages/pkg-5/script-d/script2.js'
+      ],
+      { cwd: root, reject: true }
+    );
+
+    await run(CLI_BIN_PATH, ['::pkg-1', 'fix', '---', 'super complex add 1'], {
+      cwd: root,
+      reject: true
+    });
+
+    let commit = await git.show();
+    expect(commit).toInclude('fix(packages/pkg-1): super complex add 1');
+    expect(commit).toInclude('a/packages/pkg-1/script.js');
+
+    await run(
+      CLI_BIN_PATH,
+      ['packages/pkg-2/script-a/script.js', 'fix', '---', 'super complex add 2'],
+      {
+        cwd: root,
+        reject: true
+      }
+    );
+
+    commit = await git.show();
+    expect(commit).toInclude('fix(packages/pkg-2): super complex add 2');
+    expect(commit).toInclude('a/packages/pkg-2/script-a/script.js');
+
+    await run(
+      CLI_BIN_PATH,
+      ['packages/pkg-3', '::pkg-4', 'fix', '---', 'super complex add 3'],
+      {
+        cwd: root,
+        reject: true
+      }
+    );
+
+    commit = await git.show();
+    expect(commit).toInclude('fix(packages/pkg-3): super complex add 3');
+    expect(commit).toInclude('a/packages/pkg-3/script-b/script.js');
+    expect(commit).toInclude('a/packages/pkg-4/script-c/script.js');
+
+    await run(CLI_BIN_PATH, ['::pkg-5', 'refactor', '---', 'super complex add 4'], {
+      cwd: root,
+      reject: true
+    });
+
+    commit = await git.show();
+    expect(commit).toInclude('refactor(packages/pkg-5): super complex add 4');
+    expect(commit).toInclude('a/packages/pkg-5/script-d/script1.js');
+    expect(commit).toInclude('a/packages/pkg-5/script-d/script2.js');
+  });
+});
+
 it('"external*/..." paths are committed with commit scope "externals" when using --scope-root', async () => {
   expect.hasAssertions();
 

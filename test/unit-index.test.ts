@@ -238,19 +238,33 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('colon works as monorepo pathspec shortcut', async () => {
+  it('double-colon works as monorepo pseudo-pathspec path shortcut', async () => {
     expect.hasAssertions();
 
-    mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
-    mockedFullname.mockReturnValueOnce(
-      Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
-    );
+    mockedGetGitRepoRoot.mockImplementation(() => Promise.resolve('/repo-root'));
 
     await withMocks(async () => {
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
+      );
+
+      await expect(runProgram(['::', 'type', '--', 'message 0'])).resolves.toBeDefined();
+
+      expect(mockedFullname).toBeCalledWith('/repo-root/packages/');
+      expect(mockedMakeCommit).toBeCalledWith('type(file.js): message 0', true, false);
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
+      );
+
       await expect(
-        runProgram(['::pkg-1', 'type', '--', 'message'])
+        runProgram(['::pkg-1', 'type', '--', 'message 1'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type(file.js): message', true, false);
+
+      expect(mockedFullname).toBeCalledWith('/repo-root/packages/pkg-1');
+      expect(mockedMakeCommit).toBeCalledWith('type(file.js): message 1', true, false);
 
       mockedFullname.mockImplementationOnce(() => Promise.reject('#2'));
       mockedFullname.mockReturnValueOnce(
@@ -258,10 +272,12 @@ describe('::configureProgram', () => {
       );
 
       await expect(
-        runProgram(['::pkg-1/src/index.ts', 'type', '---', 'message'])
+        runProgram(['::pkg-1/src/index.ts', 'type', '---', 'message 2'])
       ).resolves.toBeDefined();
+
+      expect(mockedFullname).toBeCalledWith('/repo-root/packages/pkg-1/src/index.ts');
       expect(mockedMakeCommit).toBeCalledWith(
-        'type(packages/pkg-1): message',
+        'type(packages/pkg-1): message 2',
         true,
         false
       );
@@ -272,10 +288,100 @@ describe('::configureProgram', () => {
       );
 
       await expect(
-        runProgram(['packages/pkg-1/src/index.ts', 'type', '---', 'message'])
+        runProgram(['packages/pkg-1/src/index.ts', 'type', '---', 'message 3'])
+      ).resolves.toBeDefined();
+
+      expect(mockedFullname).toBeCalledWith('/repo-root/packages/pkg-1/src/index.ts');
+      expect(mockedMakeCommit).toBeCalledWith(
+        'type(packages/pkg-1): message 3',
+        true,
+        false
+      );
+    });
+  });
+
+  it('"packages/package-name/..." paths are committed with commit scope "packages/package-name" when using --scope-root', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/script.ts' })
+      );
+
+      await expect(
+        runProgram(['packages/pkg-1/script.ts', 'type', '---', 'message 1'])
       ).resolves.toBeDefined();
       expect(mockedMakeCommit).toBeCalledWith(
-        'type(packages/pkg-1): message',
+        'type(packages/pkg-1): message 1',
+        true,
+        false
+      );
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/script-a/index.ts' })
+      );
+
+      await expect(
+        runProgram(['../../packages/pkg-1/script-a/index.ts', 'type', '---', 'message 2'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith(
+        'type(packages/pkg-1): message 2',
+        true,
+        false
+      );
+    });
+  });
+
+  it('ambiguous "packages/package-name/..." paths are committed with proper commit scope when using --scope-root', async () => {
+    expect.hasAssertions();
+
+    mockedGetGitRepoRoot.mockImplementation(() => Promise.resolve('/repo-root'));
+
+    await withMocks(async () => {
+      mockedCommonAncestor.mockReturnValueOnce('packages');
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({
+          ambiguous: true,
+          files: ['packages/pkg-1/script.ts', 'packages/pkg-2/script.ts']
+        })
+      );
+
+      await expect(
+        runProgram(['packages/**/*', 'type', '---', 'message 1'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(packages): message 1', true, false);
+
+      mockedCommonAncestor.mockReturnValueOnce('packages');
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({
+          ambiguous: true,
+          files: ['packages/pkg-1/script-a/index.ts', 'packages/pkg-2/script-b/index.ts']
+        })
+      );
+
+      await expect(
+        runProgram(['../../packages', 'type', '---', 'message 2'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(packages): message 2', true, false);
+
+      mockedCommonAncestor.mockReturnValueOnce('packages/pkg-1');
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({
+          ambiguous: true,
+          files: ['packages/pkg-1/script-a/index.ts', 'packages/pkg-1/script-b/index.ts']
+        })
+      );
+
+      await expect(
+        runProgram(['::pkg-1', 'type', '---', 'message 3'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith(
+        'type(packages/pkg-1): message 3',
         true,
         false
       );
