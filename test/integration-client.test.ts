@@ -845,23 +845,70 @@ it('both staged and non-staged paths are added and committed properly', async ()
   });
 });
 
-it('"external-scripts/..." is committed as "externals" when using --scope-root', async () => {
+it('"external*/..." paths are committed with commit scope "externals" when using --scope-root', async () => {
   expect.hasAssertions();
 
   await withMockedFixture(async ({ root, git }) => {
     if (!git) throw new Error('must use git-repository fixture');
 
-    await run('mkdir', ['external-scripts'], { cwd: root, reject: true });
-    await run('touch', ['external-scripts/script'], { cwd: root, reject: true });
+    await run(
+      'mkdir',
+      [
+        '-p',
+        'external-scripts',
+        'external/script-a',
+        'externals/script-b',
+        'externalbin/script/c'
+      ],
+      { cwd: root, reject: true }
+    );
 
-    await run(CLI_BIN_PATH, ['external-scripts', 'fix', '---', 'super complex add'], {
+    await run(
+      'touch',
+      [
+        'external-scripts/script.js',
+        'external/script-a/script.js',
+        'externals/script-b/script.js',
+        'externalbin/script/c/script.js'
+      ],
+      { cwd: root, reject: true }
+    );
+
+    await run(CLI_BIN_PATH, ['external-scripts', 'fix', '---', 'super complex add 1'], {
       cwd: root,
       reject: true
     });
 
-    const commit = await git.show();
-    expect(commit).toInclude('fix(externals): super complex add');
-    expect(commit).toInclude('a/external-scripts/script');
+    let commit = await git.show();
+    expect(commit).toInclude('fix(externals): super complex add 1');
+    expect(commit).toInclude('a/external-scripts/script.js');
+
+    await run(CLI_BIN_PATH, ['external', 'fix', '---', 'super complex add 2'], {
+      cwd: root,
+      reject: true
+    });
+
+    commit = await git.show();
+    expect(commit).toInclude('fix(externals): super complex add 2');
+    expect(commit).toInclude('a/external/script-a/script.js');
+
+    await run(CLI_BIN_PATH, ['externals', 'fix', '---', 'super complex add 3'], {
+      cwd: root,
+      reject: true
+    });
+
+    commit = await git.show();
+    expect(commit).toInclude('fix(externals): super complex add 3');
+    expect(commit).toInclude('a/externals/script-b/script.js');
+
+    await run(CLI_BIN_PATH, ['externalbin', 'fix', '---', 'super complex add 4'], {
+      cwd: root,
+      reject: true
+    });
+
+    commit = await git.show();
+    expect(commit).toInclude('fix(externals): super complex add 4');
+    expect(commit).toInclude('a/externalbin/script/c/script.js');
   });
 });
 

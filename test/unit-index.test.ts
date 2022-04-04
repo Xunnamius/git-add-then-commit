@@ -241,10 +241,10 @@ describe('::configureProgram', () => {
   it('colon works as monorepo pathspec shortcut', async () => {
     expect.hasAssertions();
 
-      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
-      mockedFullname.mockReturnValueOnce(
-        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
-      );
+    mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+    mockedFullname.mockReturnValueOnce(
+      Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
+    );
 
     await withMocks(async () => {
       await expect(
@@ -282,7 +282,7 @@ describe('::configureProgram', () => {
     });
   });
 
-  it('"external-scripts/..." is committed as "externals" when using --scope-root', async () => {
+  it('"external*/..." paths are committed with commit scope "externals" when using --scope-root', async () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
@@ -292,9 +292,9 @@ describe('::configureProgram', () => {
       );
 
       await expect(
-        runProgram(['external-scripts/script.ts', 'type', '---', 'message'])
+        runProgram(['external-scripts/script.ts', 'type', '---', 'message 1'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type(externals): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 1', true, false);
 
       mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
       mockedFullname.mockReturnValueOnce(
@@ -302,9 +302,92 @@ describe('::configureProgram', () => {
       );
 
       await expect(
-        runProgram(['../../external-scripts/script-a/index.ts', 'type', '---', 'message'])
+        runProgram([
+          '../../external-scripts/script-a/index.ts',
+          'type',
+          '---',
+          'message 2'
+        ])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type(externals): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 2', true, false);
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'external/script-a/index.ts' })
+      );
+
+      await expect(
+        runProgram(['../../external/script-a/index.ts', 'type', '---', 'message 3'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 3', true, false);
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'externals/script-a/index.ts' })
+      );
+
+      await expect(
+        runProgram(['../../externals/script-a/index.ts', 'type', '---', 'message 4'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 4', true, false);
+
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'externalbin/script-a/index.ts' })
+      );
+
+      await expect(
+        runProgram(['../../externalized/script-a/index.ts', 'type', '---', 'message 5'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 5', true, false);
+    });
+  });
+
+  it('ambiguous "external*/..." paths are committed with proper commit scope when using --scope-root', async () => {
+    expect.hasAssertions();
+
+    await withMocks(async () => {
+      mockedCommonAncestor.mockReturnValueOnce('external-scripts');
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({
+          ambiguous: true,
+          files: ['external-scripts/script-1.ts', 'external-scripts/script-2.ts']
+        })
+      );
+
+      await expect(
+        runProgram(['external-scripts', 'type', '---', 'message 1'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 1', true, false);
+
+      mockedCommonAncestor.mockReturnValueOnce('external');
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({
+          ambiguous: true,
+          files: ['external/script-a/index.ts', 'external/script-b/index.ts']
+        })
+      );
+
+      await expect(
+        runProgram(['../../external', 'type', '---', 'message 2'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 2', true, false);
+
+      mockedCommonAncestor.mockReturnValueOnce('externalbin');
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({
+          ambiguous: true,
+          files: ['externalbin/script-a/index.ts', 'externalbin/script-b/index.ts']
+        })
+      );
+
+      await expect(
+        runProgram(['../../externalized', 'type', '---', 'message 3'])
+      ).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type(externals): message 3', true, false);
     });
   });
 
