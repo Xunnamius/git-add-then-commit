@@ -7,6 +7,7 @@ import {
   commonAncestor,
   fullname,
   getStagedPaths,
+  getGitRepoRoot,
   isGitRepo,
   makeCommit,
   stagePaths
@@ -23,6 +24,7 @@ const mockedGetStagedPaths = asMockedFunction(getStagedPaths);
 const mockedIsGitRepo = asMockedFunction(isGitRepo);
 const mockedMakeCommit = asMockedFunction(makeCommit);
 const mockedStagePaths = asMockedFunction(stagePaths);
+const mockedGetGitRepoRoot = asMockedFunction(getGitRepoRoot);
 
 const getProgram = () => {
   const ctx = configureProgram();
@@ -78,7 +80,7 @@ describe('::configureProgram', () => {
           message: expect.toInclude('must pass all required arguments')
         }),
         expect(
-          runProgram(['type', '--scope-omit', '--scope-basename', 'message'])
+          runProgram(['type', '--scope-omit', '--scope-basename', 'message X'])
         ).rejects.toMatchObject({
           message: expect.toInclude('only one scope option is allowed')
         }),
@@ -102,14 +104,14 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       // * These types of errors should be caught by commit-lint!
       await expect(
-        runProgram(['type', '--scope-omit', 'scope', 'message'])
+        runProgram(['type', '--scope-omit', 'scope', 'message 1'])
       ).resolves.toBeDefined();
       await expect(
-        runProgram(['file1', 'file2', 'type', 'message'])
+        runProgram(['file1', 'file2', 'type', 'message 2'])
       ).resolves.toBeDefined();
 
-      expect(mockedMakeCommit).toBeCalledWith('scope: message', true, false);
-      expect(mockedMakeCommit).toBeCalledWith('file2(type): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('scope: message 1', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('file2(type): message 2', true, false);
     });
   });
 
@@ -119,7 +121,7 @@ describe('::configureProgram', () => {
     await withMocks(async () => {
       mockStagedPaths.clear();
 
-      await expect(runProgram(['type', 'scope', 'message'])).rejects.toMatchObject({
+      await expect(runProgram(['type', 'scope', 'message 3'])).rejects.toMatchObject({
         message: expect.toInclude('must stage a file or pass a path')
       });
     });
@@ -132,7 +134,7 @@ describe('::configureProgram', () => {
       mockedIsGitRepo.mockReturnValueOnce(Promise.resolve(false));
 
       await expect(
-        runProgram(['file', 'type', 'scope', 'message'])
+        runProgram(['file', 'type', 'scope', 'message Y'])
       ).rejects.toMatchObject({
         message: expect.toInclude('not a git repository')
       });
@@ -147,7 +149,7 @@ describe('::configureProgram', () => {
       mockedGetStagedPaths.mockReturnValueOnce(Promise.resolve([]));
 
       await expect(
-        runProgram(['file', 'type', 'scope', 'message'])
+        runProgram(['file', 'type', 'scope', 'message Z'])
       ).rejects.toMatchObject({
         message: expect.toInclude('nothing to commit')
       });
@@ -165,7 +167,7 @@ describe('::configureProgram', () => {
       });
 
       await expect(
-        runProgram(['file', 'type', 'scope', 'message'])
+        runProgram(['file', 'type', 'scope', 'message W'])
       ).rejects.toMatchObject({ message: 'badness' });
 
       expect(mockedMakeCommit).toBeCalled();
@@ -177,9 +179,9 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['file', 'type', '-', 'message', '--no-verify'])
+        runProgram(['file', 'type', '-', 'message V', '--no-verify'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, true);
+      expect(mockedMakeCommit).toBeCalledWith('type: message V', true, true);
     });
   });
 
@@ -188,9 +190,9 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['file', 'type', '-', 'message', '--verify=simple'])
+        runProgram(['file', 'type', '-', 'message U', '--verify=simple'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, 'simple');
+      expect(mockedMakeCommit).toBeCalledWith('type: message U', true, 'simple');
     });
   });
 
@@ -199,9 +201,9 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['file', 'type', '-', 'message', '-v', 'simple'])
+        runProgram(['file', 'type', '-', 'message T', '-v', 'simple'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, 'simple');
+      expect(mockedMakeCommit).toBeCalledWith('type: message T', true, 'simple');
     });
   });
 
@@ -210,9 +212,9 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['file', 'type', '-', 'message', '--verify=false'])
+        runProgram(['file', 'type', '-', 'message S', '--verify=false'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, true);
+      expect(mockedMakeCommit).toBeCalledWith('type: message S', true, true);
     });
   });
 
@@ -221,9 +223,9 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['file', 'type', '-', 'message', '--verify=true'])
+        runProgram(['file', 'type', '-', 'message R', '--verify=true'])
       ).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type: message R', true, false);
     });
   });
 
@@ -231,18 +233,18 @@ describe('::configureProgram', () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
-      await expect(runProgram(['file', 'type', '-', 'message'])).resolves.toBeDefined();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+      await expect(runProgram(['file', 'type', '-', 'message Q'])).resolves.toBeDefined();
+      expect(mockedMakeCommit).toBeCalledWith('type: message Q', true, false);
     });
   });
 
   it('colon works as monorepo pathspec shortcut', async () => {
     expect.hasAssertions();
 
-    mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
-    mockedFullname.mockReturnValueOnce(
-      Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
-    );
+      mockedFullname.mockImplementationOnce(() => Promise.reject('#1'));
+      mockedFullname.mockReturnValueOnce(
+        Promise.resolve({ ambiguous: false, file: 'packages/pkg-1/src/file.js' })
+      );
 
     await withMocks(async () => {
       await expect(
@@ -336,9 +338,9 @@ describe('::configureProgram', () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
-      await expect(runProgram(['file', 'type', '-', 'message'])).resolves.toBeDefined();
+      await expect(runProgram(['file', 'type', '-', 'message P'])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(1);
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type: message P', true, false);
     });
   });
 
@@ -351,9 +353,11 @@ describe('::configureProgram', () => {
         Promise.resolve({ ambiguous: false, file: 'file' })
       );
 
-      await expect(runProgram(['file', 'type', '--', 'message'])).resolves.toBeDefined();
+      await expect(
+        runProgram(['file', 'type', '--', 'message O'])
+      ).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(2);
-      expect(mockedMakeCommit).toBeCalledWith('type(file): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(file): message O', true, false);
     });
   });
 
@@ -382,10 +386,10 @@ describe('::configureProgram', () => {
       );
 
       await expect(
-        runProgram(['package.json', 'type', '---', 'message'])
+        runProgram(['package.json', 'type', '---', 'message N'])
       ).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(2);
-      expect(mockedMakeCommit).toBeCalledWith('type(package): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(package): message N', true, false);
     });
   });
 
@@ -408,9 +412,9 @@ describe('::configureProgram', () => {
     expect.hasAssertions();
 
     await withMocks(async () => {
-      await expect(runProgram(['file', 'TyPe', '-', 'message'])).resolves.toBeDefined();
+      await expect(runProgram(['file', 'TyPe', '-', 'message M'])).resolves.toBeDefined();
       expect(mockedFullname).toBeCalledTimes(1);
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type: message M', true, false);
     });
   });
 
@@ -431,7 +435,7 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '-f', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '-f', 'message L'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
@@ -456,7 +460,7 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '-f', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '-f', 'message K'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
@@ -484,7 +488,7 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-    }, ['type', '-f', 'message']);
+    }, ['type', '-f', 'message J']);
   });
 
   it('--scope-full works with single staged path with no path args', async () => {
@@ -505,7 +509,7 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-    }, ['type', '-f', 'message']);
+    }, ['type', '-f', 'message I']);
   });
 
   it('--scope-full works with staged paths with path args', async () => {
@@ -533,7 +537,7 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
+    }, [...addPathsToMockStaged, 'type', '-f', 'message H']);
   });
 
   it('--scope-full works with ambiguous first path with common ancestor', async () => {
@@ -568,7 +572,7 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
+    }, [...addPathsToMockStaged, 'type', '-f', 'message G']);
   });
 
   it('--scope-full errors with ambiguous first path and no common ancestor', async () => {
@@ -603,7 +607,7 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '-f', 'message']);
+    }, [...addPathsToMockStaged, 'type', '-f', 'message F']);
   });
 
   it('--scope-root works with non-ambiguous non-index path using 1st directory', async () => {
@@ -623,12 +627,12 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message E'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(b): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(b): message E', true, false);
     });
   });
 
@@ -649,12 +653,12 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message D'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(index): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(index): message D', true, false);
     });
   });
 
@@ -675,12 +679,12 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message C'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(index): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(index): message C', true, false);
     });
   });
 
@@ -701,12 +705,12 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message B'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(index): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(index): message B', true, false);
     });
   });
 
@@ -728,8 +732,8 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(second): message', true, false);
-    }, ['type', '---', 'message']);
+      expect(mockedMakeCommit).toBeCalledWith('type(second): message A', true, false);
+    }, ['type', '---', 'message A']);
   });
 
   it('--scope-root works with non-ambiguous non-index path with matching 1st directory and non-matching 2nd directory with leading dot', async () => {
@@ -750,8 +754,8 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(github): message', true, false);
-    }, ['type', '---', 'message']);
+      expect(mockedMakeCommit).toBeCalledWith('type(github): message 9', true, false);
+    }, ['type', '---', 'message 9']);
   });
 
   it('--scope-root works with non-ambiguous non-index path with matching 1st directory and no 2nd directory', async () => {
@@ -772,8 +776,8 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(feat): message', true, false);
-    }, ['type', '-r', 'message']);
+      expect(mockedMakeCommit).toBeCalledWith('type(feat): message 8', true, false);
+    }, ['type', '-r', 'message 8']);
   });
 
   it('--scope-root omits scope with non-ambiguous index path with matching 1st directory and no 2nd directory', async () => {
@@ -794,8 +798,8 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
-    }, ['type', '---', 'message']);
+      expect(mockedMakeCommit).toBeCalledWith('type: message 7', true, false);
+    }, ['type', '---', 'message 7']);
   });
 
   it('--scope-root omits scope with non-ambiguous non-index path with matching 1st directory and matching 2nd directory', async () => {
@@ -818,8 +822,8 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).not.toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
-    }, [...addPathsToMockStaged, 'type', '---', 'message']);
+      expect(mockedMakeCommit).toBeCalledWith('type: message 6', true, false);
+    }, [...addPathsToMockStaged, 'type', '---', 'message 6']);
   });
 
   it('--scope-root works with ambiguous non-index path with common ancestor using 1st directory', async () => {
@@ -848,12 +852,12 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram([...addPathsToMockStaged, 'type', '---', 'message'])
+        runProgram([...addPathsToMockStaged, 'type', '---', 'message 5'])
       ).resolves.toBeDefined();
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(file1): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(file1): message 5', true, false);
     });
   });
 
@@ -882,8 +886,8 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type: message', true, false);
-    }, [...addPathsToMockStaged, 'type', '---', 'message']);
+      expect(mockedMakeCommit).toBeCalledWith('type: message 4', true, false);
+    }, [...addPathsToMockStaged, 'type', '---', 'message 4']);
   });
 
   it('--scope-root errors with ambiguous path with no common ancestor', async () => {
@@ -914,7 +918,7 @@ describe('::configureProgram', () => {
       expect(mockedCommonAncestor).toBeCalled();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).toBeCalled();
-    }, [...addPathsToMockStaged, 'type', '---', 'message']);
+    }, [...addPathsToMockStaged, 'type', '---', 'message 3']);
   });
 
   it('--scope-basename errors with ambiguous first path', async () => {
@@ -932,7 +936,7 @@ describe('::configureProgram', () => {
 
     await withMocks(async () => {
       await expect(
-        runProgram(['b/file1', 'type', '--', 'message'])
+        runProgram(['b/file1', 'type', '--', 'message 2'])
       ).rejects.toMatchObject({ message: expect.stringContaining('ambiguous') });
 
       expect(mockedStagePaths).toBeCalledTimes(1);
@@ -947,10 +951,10 @@ describe('::configureProgram', () => {
     mockStagedPaths.add('b/file1.js');
 
     await withMocks(async () => {
-      await expect(runProgram(['type', '--', 'message'])).resolves.toBeDefined();
+      await expect(runProgram(['type', '--', 'message 1'])).resolves.toBeDefined();
       expect(mockedStagePaths).toBeCalled();
       expect(mockedFullname).not.toBeCalled();
-      expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message', true, false);
+      expect(mockedMakeCommit).toBeCalledWith('type(file1.js): message 1', true, false);
     });
   });
 
@@ -970,11 +974,11 @@ describe('::configureProgram', () => {
     );
 
     await withMocks(async () => {
-      await expect(runProgram(['b', 'c', 'type', '--', 'message'])).rejects.toMatchObject(
-        {
-          message: expect.toInclude('dangerous operation rejected')
-        }
-      );
+      await expect(
+        runProgram(['b', 'c', 'type', '--', 'message 0'])
+      ).rejects.toMatchObject({
+        message: expect.toInclude('dangerous operation rejected')
+      });
       expect(mockedFullname).toBeCalledTimes(2);
     });
   });
