@@ -68,8 +68,8 @@
     "common-ancestor-path": "^1.0.1",
     "debug": "^4.3.4",
     "execa": "^5.1.1",
-    "simple-git": "^3.5.0",
-    "yargs": "^17.4.0"
+    "simple-git": "^3.7.1",
+    "yargs": "^17.5.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",
