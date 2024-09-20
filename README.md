@@ -489,6 +489,10 @@ git commit -m 'docs(packages): add license section to all packages'
   files with [vscode][13] or [`git add -p`][14] then use `gac` to quickly
   compose an [atomic][7] [conventional commit][10].
 
+- `gac` automatically adds ["!"](https://www.conventionalcommits.org/en/v1.0.0/#specification) to commit messages that are breaking changes.
+
+- `gac`  refuses to comply with unsafe git add commands unless the `--force` argument is given. For example, calling `git add -p some-file.js` and then later (perhaps accidentally) calling `gac some-file.js --- 'some message'` would result in the carefully curated changes that were staged by the first call to `git add` to be entirely overwritten by the second call to `git add` performed by `gac`. `gac` will detect this scenario and prevent a footgun scenario.
+
 ### Importing as a Module
 
 This package can be imported and run directly in source without spawning a child
