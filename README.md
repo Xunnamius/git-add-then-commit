@@ -489,7 +489,7 @@ git commit -m 'docs(packages): add license section to all packages'
   files with [vscode][13] or [`git add -p`][14] then use `gac` to quickly
   compose an [atomic][7] [conventional commit][10].
 
-- `gac` automatically adds ["!"](https://www.conventionalcommits.org/en/v1.0.0/#specification) to commit messages that are breaking changes.
+- `gac` automatically adds "!" to messages of commits that are [breaking changes](https://www.conventionalcommits.org/en/v1.0.0/#specification).
 
 - `gac`  refuses to comply with unsafe git add commands unless the `--force` argument is given. For example, calling `git add -p some-file.js` and then later (perhaps accidentally) calling `gac some-file.js --- 'some message'` would result in the carefully curated changes staged by the first call to `git add` to be entirely overwritten by the second call to `git add` performed by `gac`. `gac` will detect this scenario and disarm the footgun.
 
